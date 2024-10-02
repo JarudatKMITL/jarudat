@@ -1,0 +1,17 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/Anakotmai-Bold.ttf",
+      "sha1": "f77d7451f73cb6c67e85269a6e191c31b90a813e"
+    },
+    {
+      "path": "assets/fonts/Anakotmai-Light.ttf",
+      "sha1": "c4a4f8fc0dce40034ba5f28273eb7adef23c666a"
+    },
+    {
+      "path": "assets/fonts/Anakotmai-Medium.ttf",
+      "sha1": "c57dd439c4041a82dbecc3fc1d7ae9a132e57be7"
+    }
+  ]
+}
