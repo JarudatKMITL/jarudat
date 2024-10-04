@@ -1,17 +1,19 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import React from 'react'
-import HomeScreen from './screen/HomeScreen'
-import { SafeAreaView } from 'react-native-safe-area-context'
+
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AuthStack from './navigations/AuthStack';
+import AppStack from './navigations/AppStack';
+
+const Stack = createNativeStackNavigator();
 
 const App = () => {
   return (
+    <NavigationContainer>
+      <AppStack/>
+    </NavigationContainer>
 
-
-    <HomeScreen/>
-
-
-
-
+   
 
 
   )
@@ -19,17 +21,3 @@ const App = () => {
 
 export default App
 
-const styles = StyleSheet.create({
-  customFont: {
-    fontFamily: 'Anakotmai-Bold',
-
-  },
-  customFont2: {
-    fontFamily: 'Anakotmai-Light',
-
-  },
-  customFont10: {
-    fontFamily: 'Anakotmai-Medium',
-
-  },
-});

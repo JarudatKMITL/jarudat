@@ -3,18 +3,19 @@ module.exports = {
   content: [
     "./App.{js,jsx,ts,tsx}", 
     "./screen/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx}"
   ],
   theme: {
     fontFamily: {
-      primary: ['Anakotmai-Bold'], // เพิ่มฟอนต์ที่คุณต้องการ
+      primary: ['Anakotmai-Bold'],
+      primaryLight:['Anakotmai-Light'],
+      primaryMedium:['Anakotmai-Medium'],
+
     },
     extend: {
       colors:{
-        primary: "#1c1c22",
-        accent:{
-          DEFAULT: "#00ff99",
-          hover: "00e187",
-        }
+        primary: "#aa18ea",
+        accent: "1f212c",
       },
     }
   },

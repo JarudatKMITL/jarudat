@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
 import JIcon from '../assets/J.svg'
 
-const OnboardingScreen = ({navigation}) => {
+const Report = ({navigation}) => {
   return (
     <SafeAreaView className='flex-1 justify-center items-center bg-white'>
       <View className='mt-12 flex-col justify-center items-center'>
@@ -30,4 +30,4 @@ const OnboardingScreen = ({navigation}) => {
   )
 }
 
-export default OnboardingScreen
+export default Report
