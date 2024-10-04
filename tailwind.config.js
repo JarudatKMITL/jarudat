@@ -5,14 +5,10 @@ module.exports = {
     "./screen/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
+    fontFamily: {
+      primary: ['Anakotmai-Bold'], // เพิ่มฟอนต์ที่คุณต้องการ
+    },
     extend: {
-      fontFamily: {
-        primaryBold: ['Anakotmai-Bold'], // เพิ่มฟอนต์ที่คุณต้องการ
-        primaryLight: ['Anakotmai-Light'],
-        primaryMedium: ['Anakotmai-Medium'],
-        
-
-      },
       colors:{
         primary: "#1c1c22",
         accent:{
