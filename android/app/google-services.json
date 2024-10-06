@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "941923011037",
+    "project_id": "it-helpdeak",
+    "storage_bucket": "it-helpdeak.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:941923011037:android:a35dd0d93d92f960210e34",
+        "android_client_info": {
+          "package_name": "com.jarudat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3yEAyVXbhLl_0jrCpYNDYUwO4BJpdtQk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

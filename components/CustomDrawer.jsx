@@ -13,10 +13,11 @@ import {
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CustomDrawer = props => {
   return (
-    <View className='flex-1'>
+    <SafeAreaView className='flex-1 mb-16 '>
       <DrawerContentScrollView
         {...props}
         contentContainerStyle={{backgroundColor: '#1f212c'}}>
@@ -25,7 +26,7 @@ const CustomDrawer = props => {
           className='p-5'>
           <Image
             source={require('../assets/images/user-profile.jpg')}
-            className='h-24 w-20 rounded-full mb-3'
+            className='h-20 w-20 rounded-full mb-3'
           />
           <Text className='text-white text-xl mb-1 font-primaryMedium' >
             Jarudat chaikuad
@@ -70,7 +71,7 @@ const CustomDrawer = props => {
           </View>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 

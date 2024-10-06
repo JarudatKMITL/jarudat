@@ -8,6 +8,8 @@ import AppStack from './navigations/AppStack';
 const Stack = createNativeStackNavigator();
 
 const App = () => {
+  const [isFirstLaunch, setIsFirstLaunch] = React.useState(null);
+
   return (
     <NavigationContainer>
       <AppStack/>
