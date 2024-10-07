@@ -10,12 +10,18 @@ module.exports = {
       primary: ['Anakotmai-Bold'],
       primaryLight:['Anakotmai-Light'],
       primaryMedium:['Anakotmai-Medium'],
-
+      Bold:['Poppins-Bold'],
+      Light:['Poppins-Light'],
+      Medium:['Poppins-Medium'],
+      Regular:['Poppins-Regular'],
+      SemiBold:['Poppins-SemiBold'],
     },
     extend: {
       colors:{
-        primary: "#aa18ea",
-        accent: "1f212c",
+        primary: "#45484A",
+        accent: "#AEB5BB",
+        gray:"#D9D9D9",
+        bgblue:"#e5eff8"
       },
     }
   },

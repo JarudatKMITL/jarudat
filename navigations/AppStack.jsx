@@ -2,21 +2,19 @@ import React from 'react'
 import { View, TouchableOpacity, Text } from 'react-native';
 
 import HomeScreen from '../screen/HomeScreen';
-import OnboardingScreen from '../screen/OnboardingScreen';
 import CustomDrawer from '../components/CustomDrawer';
-import Report from '../screen/Report';
-
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+
 import HomeTicketScreen from '../screen/HomeTicketScreen';
 import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
+import HomeLoginScreen from '../screen/HomeLoginScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -160,6 +158,20 @@ const HomeStack = ({ navigation }) => (
             name="HomeStack"
             component={HomeScreen}
             options={{
+                headerTitle: 'My Screen ',
+                headerTitleAlign: 'center',
+                headerTitleStyle: {
+                    color: '#fff',
+                    fontFamily: 'Kufam-SemiBoldItalic',
+                    fontSize: 18,
+                },
+            }}
+        />
+        <Stack.Screen
+            name="loginHome"
+            component={HomeLoginScreen}
+            options={{
+                headerShown:false,
                 headerTitle: 'My Screen ',
                 headerTitleAlign: 'center',
                 headerTitleStyle: {
