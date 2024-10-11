@@ -2,7 +2,7 @@ import { View, Text, Touchable, TouchableOpacity } from 'react-native'
 import React from 'react'
 import { Image } from 'react-native'
 
-const HomeLoginScreen = () => {
+const HomeLoginScreen = ({ navigation }) => {
     return (
         <View className="flex-1 bg-white items-center bg-bgblue">
             <Image source={require("../assets/images/logo.png")} className="h-10 w-36 my-5" />
@@ -13,10 +13,14 @@ const HomeLoginScreen = () => {
                 tempor incididunt ut labore et dolore
             </Text>
             <View className="mt-10 flex-row border-primary border-2 w-[70%] h-16 rounded-full">
-                <TouchableOpacity className='justify-center items-center w-[50%]  bg-[#45484A] rounded-full'>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('Login')}
+                    className='justify-center items-center w-[50%]  bg-[#45484A] rounded-full'>
                     <Text className='text-white text-lg font-SemiBold'>Login</Text>
                 </TouchableOpacity>
-                <TouchableOpacity className='justify-center items-center w-[50%]  '>
+                <TouchableOpacity 
+                onPress={() => navigation.navigate('Signup')}F
+                className='justify-center items-center w-[50%]  '>
                     <Text className='text-[#45484A] text-lg font-SemiBold'>Sign-up</Text>
                 </TouchableOpacity>
             </View>

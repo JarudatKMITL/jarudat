@@ -33,8 +33,6 @@ const OnboardingScreen = ({navigation}) => {
           title: 'On2',
           subtitle:'Done whit React',
         },
-
-
       ]}
     />
   )
