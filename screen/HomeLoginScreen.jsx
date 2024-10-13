@@ -4,7 +4,7 @@ import { Image } from 'react-native'
 
 const HomeLoginScreen = ({ navigation }) => {
     return (
-        <View className="flex-1 bg-white items-center bg-bgblue">
+        <View className="flex-1  items-center bg-bgblue">
             <Image source={require("../assets/images/logo.png")} className="h-10 w-36 my-5" />
             <Image source={require("../assets/images/man.png")} className="h-64 w-60 my-5" />
             <Text className="text-4xl font-Bold text-center text-[#45484A] mt-10 py-5">Lorem ipsum doler.</Text>

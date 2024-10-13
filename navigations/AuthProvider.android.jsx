@@ -1,11 +1,11 @@
 import React, { createContext, useState } from "react";
-import auth  from '@react-native-firebase/auth';
+import auth from '@react-native-firebase/auth';
 
 import { Alert } from 'react-native';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children, navigation }) => {
+export const AuthProvider = ({ children,navigation }) => {
     const [user, setUser] = useState(null);
 
     return (
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children, navigation }) => {
 
                     // ตรวจสอบว่าอีเมลมีอยู่ในฐานข้อมูลหรือไม่
                     const signInMethods = await auth().fetchSignInMethodsForEmail(email);
-                    
+
                     if (signInMethods.length > 0) {
                         Alert.alert('Error', 'This email address is already registered.');
                         return;
@@ -78,18 +78,22 @@ export const AuthProvider = ({ children, navigation }) => {
                         Alert.alert('Error', 'Please enter your email to reset the password.');
                         return;
                     }
-                
+
+                    const emailTrimmed = email.trim(); // ตัดช่องว่างออกจากอีเมล
+
+                    // Log the email being checked
+                    console.log('Email to reset password:', emailTrimmed);
+
                     try {
-                        console.log('Fetching sign-in methods for email:', email);
-                        const signInMethods = await auth().fetchSignInMethodsForEmail(email);
-                        console.log('Sign-in methods:', signInMethods); // ดูค่าที่ได้รับจาก Firebase
-                
-                        if (signInMethods.length === 0) {
+                        const signInMethods = await auth().fetchSignInMethodsForEmail(emailTrimmed);
+                        console.log('Sign-in methods:', signInMethods);
+
+                        if (signInMethods.length > 0) {
                             Alert.alert('Error', 'No user found with this email.');
                             return;
                         }
-                
-                        await auth().sendPasswordResetEmail(email);
+
+                        await auth().sendPasswordResetEmail(emailTrimmed);
                         Alert.alert('Success', 'Password reset email sent. Please check your email.');
                     } catch (e) {
                         console.log('Error fetching sign-in methods:', e);
@@ -100,7 +104,6 @@ export const AuthProvider = ({ children, navigation }) => {
                         }
                     }
                 },
-                
                 logout: async () => {
                     try {
                         await auth().signOut();
