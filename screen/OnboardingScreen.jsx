@@ -5,8 +5,8 @@ import { Image } from 'react-native-svg';
 const OnboardingScreen = ({navigation}) => {
   return (
     <Onboarding
-      onSkip={() => navigation.navigate("Home")}
-      onDone={() => navigation.navigate("Home")}
+      onSkip={() => navigation.navigate("HomeLogin")}
+      onDone={() => navigation.navigate("HomeLogin")}
       
       pages={[
         {

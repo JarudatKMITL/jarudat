@@ -10,7 +10,7 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
 
-  const { login } = useContext(AuthContext);
+  const { login, googleLogin } = useContext(AuthContext);
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -79,7 +79,10 @@ const LoginScreen = ({ navigation }) => {
           <Text className='text-white text-[20px] font-SemiBold text-center p-5 '>Login</Text>
         </TouchableOpacity>
         <Text className='text-center text-xl my-5 font-Medium' >or continue with</Text>
-        <TouchableOpacity className='flex-row border-2 rounded-full justify-center items-center'>
+        <TouchableOpacity
+          className='flex-row border-2 rounded-full justify-center items-center'
+          onPress={() => googleLogin()}
+        >
           <Image
             source={require("../assets/images/google.png")}
             className='w-8 h-8'

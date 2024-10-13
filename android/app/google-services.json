@@ -12,7 +12,20 @@
           "package_name": "com.jarudat"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "941923011037-lm9b275hipif8spjg9ae2hb5b8hitus2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jarudat",
+            "certificate_hash": "f8ba60bdc6da939684673cd70cdfb72d3b4e3194"
+          }
+        },
+        {
+          "client_id": "941923011037-1v13bj71v61bm5c7notm8oalbmq88h82.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyC3yEAyVXbhLl_0jrCpYNDYUwO4BJpdtQk"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "941923011037-1v13bj71v61bm5c7notm8oalbmq88h82.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

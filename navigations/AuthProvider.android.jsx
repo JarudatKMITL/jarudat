@@ -1,11 +1,11 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 import auth from '@react-native-firebase/auth';
-
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Alert } from 'react-native';
 
 export const AuthContext = createContext();
 
-export const AuthProvider = ({ children,navigation }) => {
+export const AuthProvider = ({ children, navigation }) => {
     const [user, setUser] = useState(null);
 
     return (
@@ -28,6 +28,25 @@ export const AuthProvider = ({ children,navigation }) => {
                         } else {
                             Alert.alert('Login Error', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
                         }
+                    }
+                },
+                googleLogin: async () => {
+                    try {
+                        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true }); // เช็คว่ามี Google Play Services
+                        const userInfo = await GoogleSignin.signIn(); // ดึงข้อมูลผู้ใช้
+                            console.log("User Info: ", userInfo); // ตรวจสอบข้อมูลผู้ใช้
+                        const idToken = userInfo.data.idToken; // ดึง idToken จาก userInfo
+                            console.log("idToken: ", idToken); // ตรวจสอบค่า idToken
+                        if (!idToken) {
+                            console.error('idToken is undefined'); // ถ้าไม่มี idToken ให้แสดง log error
+                            return;
+                        }
+                        const credential = auth.GoogleAuthProvider.credential(idToken);
+                        await auth().signInWithCredential(credential); // ลงชื่อเข้าใช้ Firebase
+                        setUser(auth().currentUser); // ตั้งค่า user
+                    }
+                    catch (error) {
+                        console.error('Error during Google Sign-In: ', error); // ตรวจสอบ error ที่เกิดขึ้น
                     }
                 },
                 register: async (email, password) => {
@@ -115,6 +134,6 @@ export const AuthProvider = ({ children,navigation }) => {
             }}
         >
             {children}
-        </AuthContext.Provider>
+        </AuthContext.Provider >
     );
 }
