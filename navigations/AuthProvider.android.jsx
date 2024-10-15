@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect } from "react";
 import auth from '@react-native-firebase/auth';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { Alert } from 'react-native';
+import { LoginManager, AccessToken } from 'react-native-fbsdk-next';
 
 export const AuthContext = createContext();
 
@@ -34,9 +35,9 @@ export const AuthProvider = ({ children, navigation }) => {
                     try {
                         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true }); // เช็คว่ามี Google Play Services
                         const userInfo = await GoogleSignin.signIn(); // ดึงข้อมูลผู้ใช้
-                            console.log("User Info: ", userInfo); // ตรวจสอบข้อมูลผู้ใช้
+                        console.log("User Info: ", userInfo); // ตรวจสอบข้อมูลผู้ใช้
                         const idToken = userInfo.data.idToken; // ดึง idToken จาก userInfo
-                            console.log("idToken: ", idToken); // ตรวจสอบค่า idToken
+                        console.log("idToken: ", idToken); // ตรวจสอบค่า idToken
                         if (!idToken) {
                             console.error('idToken is undefined'); // ถ้าไม่มี idToken ให้แสดง log error
                             return;
@@ -47,6 +48,33 @@ export const AuthProvider = ({ children, navigation }) => {
                     }
                     catch (error) {
                         console.error('Error during Google Sign-In: ', error); // ตรวจสอบ error ที่เกิดขึ้น
+                    }
+                },
+                fbLogin: async () => {
+                    try {
+                        // Attempt login with permissions
+                        const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+
+                        if (result.isCancelled) {
+                            throw 'User cancelled the login process';
+                        }
+
+                        // Once signed in, get the users AccessToken
+                        const data = await AccessToken.getCurrentAccessToken();
+
+                        if (!data) {
+                            throw 'Something went wrong obtaining access token';
+                        }
+                        console.log('Access Token:', data.accessToken); // ตรวจสอบค่าที่ได้
+                        // Create a Firebase credential with the AccessToken
+                        const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+                        // Sign-in the user with the credential
+                        await auth().signInWithCredential(facebookCredential);
+                    }
+                    catch (e) {
+                        console.log(e);
+
+
                     }
                 },
                 register: async (email, password) => {
