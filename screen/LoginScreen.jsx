@@ -1,16 +1,17 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TouchableOpacity, TextInput, Image, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, Image, Alert, Button } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { AuthContext } from "../navigations/AuthProvider";
-
+import Icon from 'react-native-vector-icons/FontAwesome'; // for Facebook icon
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons'; // for Twitter icon
 const LoginScreen = ({ navigation }) => {
   const [secureEntery, setSecureEntery] = useState(true);
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
 
-  const { login, googleLogin , fbLogin} = useContext(AuthContext);
+  const { login, googleLogin, fbLogin } = useContext(AuthContext);
 
   const handleLogin = () => {
     if (!email || !password) {
@@ -79,16 +80,42 @@ const LoginScreen = ({ navigation }) => {
           <Text className='text-white text-[20px] font-SemiBold text-center p-5 '>Login</Text>
         </TouchableOpacity>
         <Text className='text-center text-xl my-5 font-Medium' >or continue with</Text>
-        <TouchableOpacity
-          className='flex-row border-2 rounded-full justify-center items-center'
-          onPress={() => fbLogin()}
-        >
-          <Image
-            source={require("../assets/images/google.png")}
-            className='w-8 h-8'
-          />
-          <Text className='text-[20px] font-SemiBold p-4 '>Google</Text>
-        </TouchableOpacity>
+
+        <View className='flex-row justify-center items-center gap-6'>
+
+
+          {/* Google Button */}
+          <TouchableOpacity
+            className='bg-white p-[16px] rounded-full  h-16 w-16 justify-center items-center  '
+            onPress={() => googleLogin()}
+          >
+            <Image
+              source={require("../assets/images/google.png")}
+              className='w-[30px] h-[30px]'
+            />
+          </TouchableOpacity>
+
+          {/* Facebook Button */}
+          <TouchableOpacity
+            className='bg-blue-600 p-[16px] rounded-full  h-16 w-16 justify-center items-center '
+            onPress={() => fbLogin()}
+          >
+            <Icon name="facebook" size={30} color="#fff" />
+          </TouchableOpacity>
+
+          {/* Twitter Button */}
+          <TouchableOpacity
+            className='bg-blue-400 p-[16px] rounded-full  h-16 w-16 justify-center items-center '
+            onPress={() =>  {Alert.alert('ยังไม่ทำ')}}
+            
+          >
+            <MaterialCommunityIcons name="twitter" size={24} color="#fff" />
+          </TouchableOpacity>
+
+
+
+        </View>
+
         <View className=' flex-row py-5 justify-center'>
           <Text className='text-[20px] mr-2'>Don’t have an account?</Text>
           <TouchableOpacity

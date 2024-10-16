@@ -1,10 +1,11 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { View, TouchableOpacity, Text } from 'react-native';
 
 import HomeScreen from '../screen/HomeScreen';
 import CustomDrawer from '../components/CustomDrawer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +16,9 @@ import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
 import HomeLoginScreen from '../screen/HomeLoginScreen';
+
+import { useTheme } from '../components/ThemeContext';
+
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -63,7 +67,7 @@ const TicketDrawer = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Drawer.Navigator>
 );
 const CreateTicketDrawer = ({ navigation }) => (
@@ -89,7 +93,7 @@ const CreateTicketDrawer = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Drawer.Navigator>
 );
 const KnowledgeDrawer = ({ navigation }) => (
@@ -115,7 +119,7 @@ const KnowledgeDrawer = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Drawer.Navigator>
 );
 const ProfileDrawer = ({ navigation }) => (
@@ -141,7 +145,7 @@ const ProfileDrawer = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Drawer.Navigator>
 );
 
@@ -151,7 +155,7 @@ const HomeStack = ({ navigation }) => (
             headerTintColor: '#fff',
             headerStyle: { backgroundColor: '#06141B' },
             headerShown: true,
-            
+
         }}
     >
         <Stack.Screen
@@ -171,7 +175,7 @@ const HomeStack = ({ navigation }) => (
             name="loginHome"
             component={HomeLoginScreen}
             options={{
-                headerShown:false,
+                headerShown: false,
                 headerTitle: 'My Screen ',
                 headerTitleAlign: 'center',
                 headerTitleStyle: {
@@ -193,7 +197,7 @@ const HomeStack = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Stack.Navigator>
 );
 const TicketStack = ({ navigation }) => (
@@ -295,48 +299,57 @@ const KnowledgeStack = ({ navigation }) => (
                 ),
             }}
         />
-        
+
     </Stack.Navigator>
 
 );
-const ProfileStack = ({ navigation }) => (
-    <Stack.Navigator
-        screenOptions={{
-            headerTintColor: '#fff',
-            headerStyle: { backgroundColor: '#06141B' },
-        }}
-    >
-        <Stack.Screen
-            name="Profile"
-            component={HomeProfileScreen}
-            options={{
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-
-                headerLeft: () => (
-                    <View style={{ marginLeft: 10 }}>
-                        <Icon.Button
-                            name="menu"
-                            size={22}
-                            backgroundColor="#06141B"
-                            color="yellow"
-                            onPress={() => navigation.openDrawer()}
-                        />
-                    </View>
-                ),
+const ProfileStack = ({ navigation }) => {
+    const { theme } = useTheme();
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: theme.backgroundColor },
             }}
-        />
-    </Stack.Navigator>
-
-);
+        >
+            <Stack.Screen
+                name="Profile"
+                component={HomeProfileScreen}
+                options={{
+                    title: '',
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Icon.Button
+                                name="menu"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.openDrawer()}
+                            />
+                        </View>
+                    ),
+                    headerRight: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <MaterialCommunityIcons.Button
+                                name="account-edit"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.openDrawer()}
+                            />
+                        </View>
+                    ),
+                }}
+            />
+        </Stack.Navigator>
+    );
+};
 
 
 
 const AppStack = () => {
+    const { theme } = useTheme(); // Accessing the theme and toggle function
+
     return (
         <Tab.Navigator
             screenOptions={{

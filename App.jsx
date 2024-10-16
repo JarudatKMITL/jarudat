@@ -2,7 +2,12 @@ import React from 'react';
 import Providers from './navigations';
 
 const App = () => {
-  return <Providers />;
-}
+  return (
+    
+      <Providers />
+    
+
+  );
+};
 
 export default App;
