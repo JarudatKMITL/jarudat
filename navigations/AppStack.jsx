@@ -1,194 +1,40 @@
-import React, { useContext } from 'react'
+import React, { useContext } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
-
-import HomeScreen from '../screen/HomeScreen';
-import CustomDrawer from '../components/CustomDrawer';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-
+import AddprofileScreen from '../screen/AddprofileScreen';
+import HomeScreen from '../screen/HomeScreen';
+import CustomDrawer from '../components/CustomDrawer';
 import HomeTicketScreen from '../screen/HomeTicketScreen';
 import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
-import HomeLoginScreen from '../screen/HomeLoginScreen';
-
 import { useTheme } from '../components/ThemeContext';
 
-
+// สร้าง Stack Navigators เดิมแต่ละอันเพื่อคงฟังก์ชันการทำงานทั้งหมด
 const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
-
-const HomeDrawer = ({ navigation }) => (
-    <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveBackgroundColor: '#06141B',
-            drawerActiveTintColor: 'yellow',
-            drawerInactiveTintColor: '#333',
-            drawerLabelStyle: {
-                marginLeft: -20,
-                fontFamily: 'Anakotmai-Medium',
-                fontSize: 15,
-            },
-        }}>
-        <Drawer.Screen
-            name="Home"
-            component={HomeStack}
-        />
-    </Drawer.Navigator>
-);
-const TicketDrawer = ({ navigation }) => (
-    <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveBackgroundColor: '#06141B',
-            drawerActiveTintColor: 'yellow',
-            drawerInactiveTintColor: '#333',
-            drawerLabelStyle: {
-                marginLeft: -20,
-                fontFamily: 'Anakotmai-Medium',
-                fontSize: 15,
-            },
-        }}>
-        <Drawer.Screen
-            name="Tickets"
-            component={TicketStack}
-            options={{
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="home-outline" size={22} color={color} />
-                ),
-            }}
-        />
-
-    </Drawer.Navigator>
-);
-const CreateTicketDrawer = ({ navigation }) => (
-    <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveBackgroundColor: '#06141B',
-            drawerActiveTintColor: 'yellow',
-            drawerInactiveTintColor: '#333',
-            drawerLabelStyle: {
-                marginLeft: -20,
-                fontFamily: 'Anakotmai-Medium',
-                fontSize: 15,
-            },
-        }}>
-        <Drawer.Screen
-            name="CreateTicket"
-            component={CreateTicketStack}
-            options={{
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="home-outline" size={22} color={color} />
-                ),
-            }}
-        />
-
-    </Drawer.Navigator>
-);
-const KnowledgeDrawer = ({ navigation }) => (
-    <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveBackgroundColor: '#06141B',
-            drawerActiveTintColor: 'yellow',
-            drawerInactiveTintColor: '#333',
-            drawerLabelStyle: {
-                marginLeft: -20,
-                fontFamily: 'Anakotmai-Medium',
-                fontSize: 15,
-            },
-        }}>
-        <Drawer.Screen
-            name="Knowlead"
-            component={KnowledgeStack}
-            options={{
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="home-outline" size={22} color={color} />
-                ),
-            }}
-        />
-
-    </Drawer.Navigator>
-);
-const ProfileDrawer = ({ navigation }) => (
-    <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
-        screenOptions={{
-            headerShown: false,
-            drawerActiveBackgroundColor: '#06141B',
-            drawerActiveTintColor: 'yellow',
-            drawerInactiveTintColor: '#333',
-            drawerLabelStyle: {
-                marginLeft: -20,
-                fontFamily: 'Anakotmai-Medium',
-                fontSize: 15,
-            },
-        }}>
-        <Drawer.Screen
-            name="Profile"
-            component={ProfileStack}
-            options={{
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="home-outline" size={22} color={color} />
-                ),
-            }}
-        />
-
-    </Drawer.Navigator>
-);
 
 const HomeStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
             headerTintColor: '#fff',
             headerStyle: { backgroundColor: '#06141B' },
-            headerShown: true,
-
         }}
     >
         <Stack.Screen
-            name="HomeStack"
+            name="Home1"
             component={HomeScreen}
             options={{
-                headerTitle: 'My Screen ',
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-            }}
-        />
-        <Stack.Screen
-            name="loginHome"
-            component={HomeLoginScreen}
-            options={{
-                headerShown: false,
-                headerTitle: 'My Screen ',
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-
+                headerTitle: 'Home',
                 headerLeft: () => (
                     <View style={{ marginLeft: 10 }}>
                         <Icon.Button
                             name="menu"
-                            size={22}
+                            size={25}
                             backgroundColor="#06141B"
                             color="yellow"
                             onPress={() => navigation.openDrawer()}
@@ -197,9 +43,9 @@ const HomeStack = ({ navigation }) => (
                 ),
             }}
         />
-
     </Stack.Navigator>
 );
+
 const TicketStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
@@ -208,21 +54,15 @@ const TicketStack = ({ navigation }) => (
         }}
     >
         <Stack.Screen
-            name="Tickets"
+            name="Ticket1s"
             component={HomeTicketScreen}
             options={{
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-
+                headerTitle: 'Tickets',
                 headerLeft: () => (
                     <View style={{ marginLeft: 10 }}>
                         <Icon.Button
                             name="menu"
-                            size={22}
+                            size={25}
                             backgroundColor="#06141B"
                             color="yellow"
                             onPress={() => navigation.openDrawer()}
@@ -232,8 +72,8 @@ const TicketStack = ({ navigation }) => (
             }}
         />
     </Stack.Navigator>
-
 );
+
 const CreateTicketStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
@@ -242,21 +82,15 @@ const CreateTicketStack = ({ navigation }) => (
         }}
     >
         <Stack.Screen
-            name="Creact Ticket"
+            name="CreateTicket1"
             component={HomeCreacteTicket}
             options={{
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-
+                headerTitle: 'Create Ticket',
                 headerLeft: () => (
                     <View style={{ marginLeft: 10 }}>
                         <Icon.Button
                             name="menu"
-                            size={22}
+                            size={25}
                             backgroundColor="#06141B"
                             color="yellow"
                             onPress={() => navigation.openDrawer()}
@@ -266,8 +100,8 @@ const CreateTicketStack = ({ navigation }) => (
             }}
         />
     </Stack.Navigator>
-
 );
+
 const KnowledgeStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
@@ -276,21 +110,15 @@ const KnowledgeStack = ({ navigation }) => (
         }}
     >
         <Stack.Screen
-            name="Knowlead Base"
+            name="Knowledge1"
             component={HomeKnowleadScreen}
             options={{
-                headerTitleAlign: 'center',
-                headerTitleStyle: {
-                    color: '#fff',
-                    fontFamily: 'Kufam-SemiBoldItalic',
-                    fontSize: 18,
-                },
-
+                headerTitle: 'Knowledge',
                 headerLeft: () => (
                     <View style={{ marginLeft: 10 }}>
                         <Icon.Button
                             name="menu"
-                            size={22}
+                            size={25}
                             backgroundColor="#06141B"
                             color="yellow"
                             onPress={() => navigation.openDrawer()}
@@ -299,24 +127,28 @@ const KnowledgeStack = ({ navigation }) => (
                 ),
             }}
         />
-
     </Stack.Navigator>
-
 );
+
 const ProfileStack = ({ navigation }) => {
     const { theme } = useTheme();
     return (
         <Stack.Navigator
             screenOptions={{
-                headerTintColor: '#fff',
                 headerStyle: { backgroundColor: theme.backgroundColor },
             }}
         >
             <Stack.Screen
-                name="Profile"
+                name="Profile1"
                 component={HomeProfileScreen}
                 options={{
-                    title: '',
+                    headerTitle: 'Your Profile',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
                     headerLeft: () => (
                         <View style={{ marginLeft: 10 }}>
                             <Icon.Button
@@ -335,91 +167,104 @@ const ProfileStack = ({ navigation }) => {
                                 size={25}
                                 backgroundColor={theme.backgroundColor}
                                 color={theme.textColor}
-                                onPress={() => navigation.openDrawer()}
+                                onPress={() => navigation.navigate('EditProfile')}
                             />
                         </View>
                     ),
+                }}
+            />
+
+            <Stack.Screen
+                name="EditProfile"
+                component={AddprofileScreen}
+                options={{
+                    headerTitle: 'Edit Profile',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate('Profile1')}
+                            />
+                        </View>
+                    ),
+
                 }}
             />
         </Stack.Navigator>
     );
 };
 
-
-
-const AppStack = () => {
-    const { theme } = useTheme(); // Accessing the theme and toggle function
-
-    return (
-        <Tab.Navigator
-            screenOptions={{
-                headerShown: false,
-                tabBarShowLabel: true,
-                tabBarStyle: { backgroundColor: '#AD40AF' },
-                tabBarActiveTintColor: 'yellow',
-                tabBarInactiveTintColor: '#FFF',
-                tabBarStyle: {
-                    position: 'absolute',
-                    backgroundColor: '#06141B',
-                    height: 80,
-
-                },
-                tabBarLabelStyle: {
-                    fontSize: 12, // ปรับขนาดฟอนต์ที่นี่
-                    marginBottom: 10,
-                    fontFamily: 'Anakotmai-Madium',
-                    fontWeight: 'bold'
-
-                },
+// สร้าง Drawer Navigator รวม Stack ทั้งหมด
+const AppDrawer = () => (
+    <Drawer.Navigator
+        drawerContent={props => <CustomDrawer {...props} />}
+        screenOptions={{
+            headerShown: false,
+            drawerActiveBackgroundColor: '#06141B',
+            drawerActiveTintColor: 'yellow',
+            drawerInactiveTintColor: '#333',
+            drawerLabelStyle: {
+                marginLeft: -20,
+                fontFamily: 'Anakotmai-Medium',
+                fontSize: 15,
+            },
+        }}
+    >
+        <Drawer.Screen
+            name="Home"
+            component={HomeStack}
+            options={{
+                drawerIcon: ({ color }) => (
+                    <Ionicons name="home-outline" size={22} color={color} />
+                ),
             }}
-        >
-            <Tab.Screen
-                name="Home"
-                component={HomeDrawer}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="home-outline" color={color} size={size} />
-                    )
-                }}
-            />
-            <Tab.Screen
-                name="Ticket"
-                component={TicketDrawer}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="newspaper-outline" color={color} size={size} />
-                    )
-                }}
-            />
-            <Tab.Screen
-                name="CreateTicket"
-                component={CreateTicketDrawer}
-                options={{
-                    tabBarIcon: () => (
-                        <Ionicons name="create-outline" color='#F46C3F' size={50} />
-                    )
-                }}
-            />
-            <Tab.Screen
-                name="Knowlead"
-                component={KnowledgeDrawer}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="school-outline" color={color} size={size} />
-                    )
-                }}
-            />
-            <Tab.Screen
-                name="Profile"
-                component={ProfileDrawer}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <Ionicons name="person-outline" color={color} size={size} />
-                    )
-                }}
-            />
-        </Tab.Navigator>
-    )
-}
+        />
+        <Drawer.Screen
+            name="Tickets"
+            component={TicketStack}
+            options={{
+                drawerIcon: ({ color }) => (
+                    <Ionicons name="newspaper-outline" size={22} color={color} />
+                ),
+            }}
+        />
+        <Drawer.Screen
+            name="CreateTicket"
+            component={CreateTicketStack}
+            options={{
+                drawerIcon: ({ color }) => (
+                    <Ionicons name="create-outline" size={22} color={color} />
+                ),
+            }}
+        />
+        <Drawer.Screen
+            name="Knowledge"
+            component={KnowledgeStack}
+            options={{
+                drawerIcon: ({ color }) => (
+                    <Ionicons name="school-outline" size={22} color={color} />
+                ),
+            }}
+        />
+        <Drawer.Screen
+            name="Profile"
+            component={ProfileStack}
+            options={{
+                drawerIcon: ({ color }) => (
+                    <Ionicons name="person-outline" size={22} color={color} />
+                ),
+            }}
+        />
+    </Drawer.Navigator>
+);
 
-export default AppStack
+export default AppDrawer;

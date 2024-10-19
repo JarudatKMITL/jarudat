@@ -3,20 +3,18 @@ import { useColorScheme } from 'nativewind'; // Uses the color scheme from nativ
 
 // Define light and dark themes
 const lightTheme = {
-  backgroundColor: '#e5eff8',
+  backgroundColor: '#DEE4E7',
   textColor: '#45484A',
-  accentColor: '#6200EE',
-  disabledColor: '#BDBDBD',
-  dividerColor: '#E0E0E0',
-  iconProfile: '#FF6347',
+  accentColor: '#ECEFF1',
+  iconProfile: '#000',
 };
 
 const darkTheme = {
-    backgroundColor: '#222831',  // สีพื้นหลัง
-    textColor: '#EEEEEE',        // สีข้อความ
-    accentColor: '#393E46',      // สีเน้น
-    disabledColor: '#BDBDBD',    // สีสำหรับองค์ประกอบที่ไม่สามารถใช้ได้
-    iconProfile: '#FFD369',
+  backgroundColor: '#222222',  // สีพื้นหลัง
+  textColor: '#EEEEEE',        // สีข้อความ
+  accentColor: '#424242',     // สีตัด
+  iconProfile: '#FFF',
+
 };
 
 // Create a context for theme
