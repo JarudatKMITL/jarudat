@@ -12,7 +12,7 @@ import { AuthContext } from "../navigations/AuthProvider";
 
 
 
-const AddprofileScreen = ({navigation}) => {
+const EditProfileScreen = ({navigation}) => {
     const { theme } = useTheme(); // Accessing the theme and toggle function
     const { user } = useContext(AuthContext);
     const [modalVisible, setModalVisible] = useState(false);
@@ -35,7 +35,7 @@ const AddprofileScreen = ({navigation}) => {
             if (doc.exists) {
                 const userData = doc.data();
                 setProfileImage(userData.profileImage || null);
-                setDisplayName(userData.name || 'New User');
+                setDisplayName(userData.name || user.displayName );
                 setEmail(userData.email || null);
                 setPhone(userData.phone || null);
                 setCompany(userData.company || null);
@@ -225,7 +225,7 @@ const AddprofileScreen = ({navigation}) => {
                             className='font-Medium text-xl mr-5'
                             value={displayName}
                             onChangeText={setDisplayName}
-                            placeholder='Nick Name'
+                            placeholder={displayName}
                             placeholderTextColor={theme.textColor}
                             keyboardType="email-address"
                         />
@@ -236,7 +236,11 @@ const AddprofileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Nick Name</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
+                        style={{ 
+                            backgroundColor: theme.accentColor ,
+                            borderColor: errorFields.description ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
+                            borderWidth: 1
+                        }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -255,7 +259,7 @@ const AddprofileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Email</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
+                        style={{ backgroundColor: theme.accentColor   }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -275,7 +279,11 @@ const AddprofileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Phone</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
+                        style={{ 
+                            backgroundColor: theme.accentColor ,
+                            borderColor: errorFields.phone ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
+                            borderWidth: 1
+                        }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -294,7 +302,11 @@ const AddprofileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Company</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
+                        style={{ 
+                            backgroundColor: theme.accentColor ,
+                            borderColor: errorFields.company ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
+                            borderWidth: 1
+                        }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -313,7 +325,11 @@ const AddprofileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Department</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
+                        style={{ 
+                            backgroundColor: theme.accentColor ,
+                            borderColor: errorFields.department ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
+                            borderWidth: 1
+                        }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -400,4 +416,4 @@ const AddprofileScreen = ({navigation}) => {
     )
 }
 
-export default AddprofileScreen
+export default EditProfileScreen;

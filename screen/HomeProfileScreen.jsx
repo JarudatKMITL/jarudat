@@ -25,6 +25,7 @@ const HomeProfileScreen = () => {
   const [company, setCompany] = useState(null);
   const [department, setDepartment] = useState(null);
   const [description, setDescription] = useState(null);
+  const [role, setRole] = useState('user'); // เพิ่ม state สำหรับ role
 
   const fetchUserProfile = async () => {
     try {
@@ -35,12 +36,13 @@ const HomeProfileScreen = () => {
         const userData = doc.data();
         // ตั้งค่าข้อมูลที่ดึงมาจาก Firestore
         setProfileImage(userData.profileImage || 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59');
-        setDisplayName(userData.name || 'New User');
+        setDisplayName(userData.name || user.displayName );
         setEmail(userData.email || null);
         setPhone(userData.phone || null);
         setCompany(userData.company || null);
         setDepartment(userData.department || null);
-        setDescription(userData.description || null);
+        setDescription(userData.description || 'Nick Name');
+        setRole(userData.role || 'user'); // ดึง role มาจาก Firestore
         console.log('User profile fetched successfully:', userData);
       }
     } catch (error) {
@@ -248,11 +250,11 @@ const HomeProfileScreen = () => {
             <Title
               className='mt-4 text-[25px] font-Bold  '
               style={{ color: theme.textColor }}>
-              {displayName ? displayName : 'New User'}
+              {displayName }
             </Title>
             <Caption className='text-lg'
               style={{ color: theme.textColor }} >
-              {description ? description : 'Null'}
+              {role} : {description}
             </Caption>
           </View>
         </View>

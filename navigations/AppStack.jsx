@@ -5,7 +5,6 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
-import AddprofileScreen from '../screen/AddprofileScreen';
 import HomeScreen from '../screen/HomeScreen';
 import CustomDrawer from '../components/CustomDrawer';
 import HomeTicketScreen from '../screen/HomeTicketScreen';
@@ -13,6 +12,7 @@ import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
 import { useTheme } from '../components/ThemeContext';
+import EditProfileScreen from '../screen/EditProfileScreen';
 
 // สร้าง Stack Navigators เดิมแต่ละอันเพื่อคงฟังก์ชันการทำงานทั้งหมด
 const Stack = createStackNavigator();
@@ -176,7 +176,7 @@ const ProfileStack = ({ navigation }) => {
 
             <Stack.Screen
                 name="EditProfile"
-                component={AddprofileScreen}
+                component={EditProfileScreen}
                 options={{
                     headerTitle: 'Edit Profile',
                     headerTitleAlign: 'center',
