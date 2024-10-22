@@ -3,10 +3,12 @@ import { useColorScheme } from 'nativewind'; // Uses the color scheme from nativ
 
 // Define light and dark themes
 const lightTheme = {
-  backgroundColor: '#DEE4E7',
+  backgroundColor: '#FAFAFA',
   textColor: '#45484A',
   accentColor: '#ECEFF1',
   iconProfile: '#000',
+  borderColor: '#333333'
+
 };
 
 const darkTheme = {
@@ -14,6 +16,7 @@ const darkTheme = {
   textColor: '#EEEEEE',        // สีข้อความ
   accentColor: '#424242',     // สีตัด
   iconProfile: '#FFF',
+  borderColor: '#ECEFF1'
 
 };
 

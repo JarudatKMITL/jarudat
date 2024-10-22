@@ -65,7 +65,7 @@ export const AuthProvider = ({ children, navigation }) => {
                         console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
 
                         // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
-                        const userDocRef = firebase.firestore().collection('users').doc(uid);
+                        const userDocRef = firebase.firestore().collection('users').doc(email);
                         await userDocRef.set({
                             email: email,
                             role: role,  // บทบาทจากการตรวจสอบ
@@ -128,7 +128,7 @@ export const AuthProvider = ({ children, navigation }) => {
                         console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
 
                         // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
-                        const userDocRef = firebase.firestore().collection('users').doc(uid);
+                        const userDocRef = firebase.firestore().collection('users').doc(email);
 
                         await userDocRef.set({
                             email: email,
@@ -184,7 +184,7 @@ export const AuthProvider = ({ children, navigation }) => {
 
 
                         // บันทึกข้อมูลบทบาทลงในคอลเลคชัน "users"
-                        const userDocRef = firebase.firestore().collection('users').doc(uid);
+                        const userDocRef = firebase.firestore().collection('users').doc(email);
                         await userDocRef.set({
                             email: email,
                             role: role,  // บทบาทที่ถูกตรวจสอบ

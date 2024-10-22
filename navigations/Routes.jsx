@@ -5,6 +5,7 @@ import { AuthContext } from './AuthProvider.android';
 import { ThemeProvider } from '../components/ThemeContext';
 import AuthStack from './AuthStack.android';
 import AppStack from './AppStack';
+import { UserProvider } from '../api/UserContext';
 
 const Routes = () => {
   const { user, setUser } = useContext(AuthContext);
@@ -24,9 +25,11 @@ const Routes = () => {
 
   return (
     <ThemeProvider>
-      <NavigationContainer>
-        {user ? <AppStack /> : <AuthStack />}
-      </NavigationContainer>
+      <UserProvider>
+        <NavigationContainer>
+          {user ? <AppStack /> : <AuthStack />}
+        </NavigationContainer>
+      </UserProvider>
     </ThemeProvider>
   );
 };

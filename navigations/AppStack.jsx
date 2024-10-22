@@ -46,61 +46,77 @@ const HomeStack = ({ navigation }) => (
     </Stack.Navigator>
 );
 
-const TicketStack = ({ navigation }) => (
-    <Stack.Navigator
-        screenOptions={{
-            headerTintColor: '#fff',
-            headerStyle: { backgroundColor: '#06141B' },
-        }}
-    >
-        <Stack.Screen
-            name="Ticket1s"
-            component={HomeTicketScreen}
-            options={{
-                headerTitle: 'Tickets',
-                headerLeft: () => (
-                    <View style={{ marginLeft: 10 }}>
-                        <Icon.Button
-                            name="menu"
-                            size={25}
-                            backgroundColor="#06141B"
-                            color="yellow"
-                            onPress={() => navigation.openDrawer()}
-                        />
-                    </View>
-                ),
+const TicketStack = ({ navigation }) => {
+    const { theme } = useTheme();
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                headerTintColor: '#fff',
+                headerStyle: { backgroundColor: '#06141B' },
             }}
-        />
-    </Stack.Navigator>
-);
+        >
+            <Stack.Screen
+                name="Ticket1s"
+                component={HomeTicketScreen}
+                options={{
+                    headerTitle: 'Tickets',
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Icon.Button
+                                name="menu"
+                                size={25}
+                                backgroundColor="#06141B"
+                                color="yellow"
+                                onPress={() => navigation.openDrawer()}
+                            />
+                        </View>
+                    ),
+                }}
+            />
+        </Stack.Navigator>
+    )
+};
 
-const CreateTicketStack = ({ navigation }) => (
-    <Stack.Navigator
-        screenOptions={{
-            headerTintColor: '#fff',
-            headerStyle: { backgroundColor: '#06141B' },
-        }}
-    >
-        <Stack.Screen
-            name="CreateTicket1"
-            component={HomeCreacteTicket}
-            options={{
-                headerTitle: 'Create Ticket',
-                headerLeft: () => (
-                    <View style={{ marginLeft: 10 }}>
-                        <Icon.Button
-                            name="menu"
-                            size={25}
-                            backgroundColor="#06141B"
-                            color="yellow"
-                            onPress={() => navigation.openDrawer()}
-                        />
-                    </View>
-                ),
+
+const CreateTicketStack = ({ navigation }) => {
+    const { theme } = useTheme();
+    return (
+        <Stack.Navigator
+            screenOptions={{
+                headerStyle: { backgroundColor: theme.backgroundColor },
             }}
-        />
-    </Stack.Navigator>
-);
+        >
+            <Stack.Screen
+                name="CreateTicket1"
+                component={HomeCreacteTicket}
+                options={{
+                    headerTitle: 'Create Ticket',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="menu"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.openDrawer()}
+                            />
+                        </View>
+                    ),
+                }}
+            />
+
+        </Stack.Navigator>
+    )
+};
+
+
+
 
 const KnowledgeStack = ({ navigation }) => (
     <Stack.Navigator

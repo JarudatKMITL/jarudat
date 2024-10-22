@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Alert, View, Modal, Pressable, TouchableOpacity, Switch, StatusBar, ScrollView, Button, RefreshControl, TextInput,ActivityIndicator } from 'react-native';
+import { Alert, View, Modal, Pressable, TouchableOpacity, Switch, StatusBar, ScrollView, Button, RefreshControl, TextInput, ActivityIndicator } from 'react-native';
 import { Avatar, Title, Caption, Text, } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon1 from 'react-native-vector-icons/Ionicons';
@@ -12,8 +12,8 @@ import { AuthContext } from "../navigations/AuthProvider";
 
 
 
-const EditProfileScreen = ({navigation}) => {
-    const { theme } = useTheme(); // Accessing the theme and toggle function
+const EditProfileScreen = ({ navigation }) => {
+    const { theme ,colorScheme} = useTheme(); // Accessing the theme and toggle function
     const { user } = useContext(AuthContext);
     const [modalVisible, setModalVisible] = useState(false);
     const [profileImage, setProfileImage] = useState(user.photoURL);
@@ -30,12 +30,12 @@ const EditProfileScreen = ({navigation}) => {
 
     const fetchUserProfile = async () => {
         try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+            const userDocRef = firebase.firestore().collection('users').doc(user.email);
             const doc = await userDocRef.get();
             if (doc.exists) {
                 const userData = doc.data();
                 setProfileImage(userData.profileImage || null);
-                setDisplayName(userData.name || user.displayName );
+                setDisplayName(userData.name || user.displayName);
                 setEmail(userData.email || null);
                 setPhone(userData.phone || null);
                 setCompany(userData.company || null);
@@ -58,12 +58,12 @@ const EditProfileScreen = ({navigation}) => {
             width: 300,
             height: 300,
         })
-        .then(image => {
-            setSelectedImage(image.path); // แสดงรูปที่เลือกทันที
-            setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
-            setModalVisible(false); // ปิด Modal
-        })
-        .catch(error => console.log('Error picking image: ', error));
+            .then(image => {
+                setSelectedImage(image.path); // แสดงรูปที่เลือกทันที
+                setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
+                setModalVisible(false); // ปิด Modal
+            })
+            .catch(error => console.log('Error picking image: ', error));
     };
 
     // ฟังก์ชันสำหรับถ่ายรูปพร้อมครอปรูป
@@ -74,12 +74,12 @@ const EditProfileScreen = ({navigation}) => {
             width: 300,
             height: 300,
         })
-        .then(image => {
-            setSelectedImage(image.path); // แสดงรูปที่ถ่ายทันที
-            setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
-            setModalVisible(false); // ปิด Modal
-        })
-        .catch(error => console.log('Error capturing image: ', error));
+            .then(image => {
+                setSelectedImage(image.path); // แสดงรูปที่ถ่ายทันที
+                setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
+                setModalVisible(false); // ปิด Modal
+            })
+            .catch(error => console.log('Error capturing image: ', error));
     };
 
     // ฟังก์ชันบันทึกข้อมูลไปยัง Firebase เมื่อกดปุ่มบันทึก
@@ -111,7 +111,7 @@ const EditProfileScreen = ({navigation}) => {
 
         setLoading(true); // แสดงการหมุนเมื่อเริ่มบันทึก
         try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+            const userDocRef = firebase.firestore().collection('users').doc(user.email);
 
             // อัปเดตข้อมูลผู้ใช้ไปยัง Firestore
             await userDocRef.update({
@@ -190,6 +190,10 @@ const EditProfileScreen = ({navigation}) => {
             classname='flex-1 p-0 mb-20'
             style={{ backgroundColor: theme.backgroundColor }}
         >
+            <StatusBar
+                barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} // or "dark-content"
+                backgroundColor={theme.backgroundColor} // Set this to match your header
+            />
 
             <View className='my-8'>
                 <View className='flex items-center'>
@@ -212,8 +216,8 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Full Name</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ 
-                            backgroundColor: theme.accentColor ,
+                        style={{
+                            backgroundColor: theme.accentColor,
                             borderColor: errorFields.displayName ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
                             borderWidth: 1
                         }}>
@@ -225,7 +229,7 @@ const EditProfileScreen = ({navigation}) => {
                             className='font-Medium text-xl mr-5'
                             value={displayName}
                             onChangeText={setDisplayName}
-                            placeholder={displayName}
+                            placeholder={displayName ? displayName: "your name    "}
                             placeholderTextColor={theme.textColor}
                             keyboardType="email-address"
                         />
@@ -236,8 +240,8 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Nick Name</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ 
-                            backgroundColor: theme.accentColor ,
+                        style={{
+                            backgroundColor: theme.accentColor,
                             borderColor: errorFields.description ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
                             borderWidth: 1
                         }}>
@@ -249,7 +253,7 @@ const EditProfileScreen = ({navigation}) => {
                             className='font-Medium text-xl mr-5 items-center mt-1'
                             value={description}
                             onChangeText={setDescription}
-                            placeholder={description ? description : 'Nick Name  '}
+                            placeholder={description ? description : 'Nick Name   '}
                             placeholderTextColor={'#AEB5BB'}
                             keyboardType="email-address"
                         />
@@ -259,7 +263,7 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Email</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor   }}>
+                        style={{ backgroundColor: theme.accentColor }}>
                         <View className='ml-7 flex-row'>
                             <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                         </View>
@@ -279,8 +283,8 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Phone</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ 
-                            backgroundColor: theme.accentColor ,
+                        style={{
+                            backgroundColor: theme.accentColor,
                             borderColor: errorFields.phone ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
                             borderWidth: 1
                         }}>
@@ -302,8 +306,8 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Company</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ 
-                            backgroundColor: theme.accentColor ,
+                        style={{
+                            backgroundColor: theme.accentColor,
                             borderColor: errorFields.company ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
                             borderWidth: 1
                         }}>
@@ -325,8 +329,8 @@ const EditProfileScreen = ({navigation}) => {
                     <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Department</Text>
                     <View
                         className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ 
-                            backgroundColor: theme.accentColor ,
+                        style={{
+                            backgroundColor: theme.accentColor,
                             borderColor: errorFields.department ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
                             borderWidth: 1
                         }}>
@@ -363,7 +367,7 @@ const EditProfileScreen = ({navigation}) => {
                         disabled={loading} // ปิดปุ่มเมื่อบันทึกอย
                     >
 
-                        
+
                         <Text className='text-xl font-Bold'>Submit</Text>
                     </TouchableOpacity>
                 </View>

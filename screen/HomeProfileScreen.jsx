@@ -30,7 +30,7 @@ const HomeProfileScreen = () => {
   const fetchUserProfile = async () => {
     try {
       console.log('Fetching user profile...');
-      const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+      const userDocRef = firebase.firestore().collection('users').doc(user.email);
       const doc = await userDocRef.get();
       if (doc.exists) {
         const userData = doc.data();
@@ -71,7 +71,7 @@ const HomeProfileScreen = () => {
   // ฟังก์ชันสำหรับอัปเดตเฉพาะรูปโปรไฟล์
   const handleUpdateProfileImage = async (imagePath) => {
     try {
-      const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+      const userDocRef = firebase.firestore().collection('users').doc(user.email);
 
       // ตรวจสอบว่ามีเอกสารของผู้ใช้อยู่หรือไม่
       const doc = await userDocRef.get();
