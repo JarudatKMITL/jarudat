@@ -97,7 +97,7 @@ const CreateTicketScreen = ({ navigation }) => {
         estimatedTime: estimatedTime || null, // เวลาโดยประมาณในการแก้ไขปัญหา
         attachments: selectedImage, // เอกสารหรือรูปภาพที่แนบมา
         tags: tags || [], // แท็กหรือป้ายกำกับ
-        followUpDetails: followUpDetails || '', // รายละเอียดการติดตาม
+        followUpDetails: followUpDetails || '', // รายละเอียดการติดตาม รับงานโดย
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), // วันที่อัปเดตล่าสุด
         resolutionNotes: '', // บันทึกการแก้ปัญหาหลังจากเสร็จสิ้น
       });

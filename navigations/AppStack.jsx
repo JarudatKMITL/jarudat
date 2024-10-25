@@ -7,12 +7,16 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import HomeScreen from '../screen/HomeScreen';
 import CustomDrawer from '../components/CustomDrawer';
-import HomeTicketScreen from '../screen/HomeTicketScreen';
 import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
 import { useTheme } from '../components/ThemeContext';
 import EditProfileScreen from '../screen/EditProfileScreen';
+import { UserContext } from '../api/UserContext';
+import AdminTicketScreen from '../screen/AdminTicketScreen';
+import UserTicketScreen from '../screen/UserTicketScreen';
+
+
 
 // สร้าง Stack Navigators เดิมแต่ละอันเพื่อคงฟังก์ชันการทำงานทั้งหมด
 const Stack = createStackNavigator();
@@ -48,31 +52,77 @@ const HomeStack = ({ navigation }) => (
 
 const TicketStack = ({ navigation }) => {
     const { theme } = useTheme();
+    const { role, loading } = useContext(UserContext); // ดึงข้อมูล role และ loading จาก context
+
+    if (loading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color={theme.textColor} />
+            </View>
+        );
+    }
+
     return (
         <Stack.Navigator
             screenOptions={{
-                headerTintColor: '#fff',
-                headerStyle: { backgroundColor: '#06141B' },
+                headerStyle: { backgroundColor: theme.backgroundColor },
             }}
         >
-            <Stack.Screen
-                name="Ticket1s"
-                component={HomeTicketScreen}
-                options={{
-                    headerTitle: 'Tickets',
-                    headerLeft: () => (
-                        <View style={{ marginLeft: 10 }}>
-                            <Icon.Button
-                                name="menu"
-                                size={25}
-                                backgroundColor="#06141B"
-                                color="yellow"
-                                onPress={() => navigation.openDrawer()}
-                            />
-                        </View>
-                    ),
-                }}
-            />
+            {role === 'admin' ? (
+                // ถ้า role เป็น admin, แสดงหน้า AdminTicketScreen
+                <Stack.Screen
+                    name="Ticket1"
+                    component={AdminTicketScreen}
+                    options={{
+                        headerTitle: 'Create Ticket',
+                        headerTitleAlign: 'center',
+                        headerTitleStyle: {
+                            color: theme.textColor,
+                            fontFamily: 'Poppins-SemiBold',
+                            fontSize: 20,
+                        },
+                        headerLeft: () => (
+                            <View style={{ marginLeft: 10 }}>
+                                <Icon.Button
+                                    name="menu"
+                                    size={25}
+                                    backgroundColor={theme.backgroundColor}
+                                    color={theme.textColor}
+                                    onPress={() => navigation.openDrawer()}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+            ) : (
+                // ถ้า role เป็น user, แสดงหน้า UserTicketScreen
+                <Stack.Screen
+                    name="UserTickets"
+                    component={UserTicketScreen}
+                    options={{
+                        headerTitle: 'Create Ticket',
+                        headerTitleAlign: 'center',
+                        headerTitleStyle: {
+                            color: theme.textColor,
+                            fontFamily: 'Poppins-SemiBold',
+                            fontSize: 20,
+                        },
+                        headerLeft: () => (
+                            <View style={{ marginLeft: 10 }}>
+                                <Icon.Button
+                                    name="menu"
+                                    size={25}
+                                    backgroundColor={theme.backgroundColor}
+                                    color={theme.textColor}
+                                    onPress={() => navigation.openDrawer()}
+                                />
+                            </View>
+                        ),
+                    }}
+                />
+            )}
+
+            
         </Stack.Navigator>
     )
 };

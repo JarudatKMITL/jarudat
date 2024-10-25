@@ -114,10 +114,18 @@ android {
 dependencies {
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.android.gms:play-services-auth'
-    // The version of react-native is set by the React Native Gradle Plugin
+
+    // ยกเว้นไลบรารีเก่าของ Android Support
+    implementation("com.facebook.react:react-android") {
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'support-compat'
+    }
+    implementation 'androidx.core:core:1.9.0' 
+
+    // สำหรับการใช้ Firebase Messaging
+    implementation "com.google.firebase:firebase-messaging:latest-version"
     implementation 'com.facebook.android:facebook-android-sdk:latest.release'
-    implementation("com.facebook.react:react-android")
-    
+
     implementation project(':react-native-vector-icons')
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -125,3 +133,4 @@ dependencies {
         implementation jscFlavor
     }
 }
+
