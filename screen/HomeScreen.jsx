@@ -7,7 +7,7 @@ import { useTheme } from '../components/ThemeContext'; // Adjust the path accord
 
 const HomeScreen = ({ navigation }) => {
   const { logout, user } = useContext(AuthContext);
-  console.log('user', user);
+  //console.log('user', user);
   const { theme, toggleColorScheme } = useTheme(); // Accessing the theme and toggle function
 
 

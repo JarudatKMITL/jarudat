@@ -15,7 +15,7 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-      console.log('Permission granted:', authStatus);
+      //console.log('Permission granted:', authStatus);
     }
   };
 
@@ -24,7 +24,7 @@ const App = () => {
     try {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
-        console.log('FCM Token:', fcmToken);
+        //console.log('FCM Token:', fcmToken);
         updateUserToken(user.email, fcmToken);
       }
     } catch (error) {
@@ -41,7 +41,7 @@ const App = () => {
         },
         { merge: true }
       );
-      console.log("Token saved to Firestore for user:", email);
+      //console.log("Token saved to Firestore for user:", email);
     } catch (error) {
       console.error("Error saving token to Firestore:", error);
     }
@@ -64,7 +64,7 @@ const App = () => {
   // ตั้งค่าเพื่อรับการแจ้งเตือนเมื่อแอปอยู่ใน foreground
   const foregroundNotificationListener = () => {
     messaging().onMessage(async (remoteMessage) => {
-      console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
+      //console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
       PushNotification.localNotification({
         channelId: '1',
         title: remoteMessage.notification?.title || 'Notification',
@@ -92,7 +92,7 @@ const App = () => {
     // Listener ตรวจจับการเปลี่ยนแปลงสถานะการล็อกอิน
     const unsubscribeAuth = auth().onAuthStateChanged((user) => {
       if (user) {
-        console.log('User logged in:', user.email);
+        //console.log('User logged in:', user.email);
         getToken(user); // ดึงและบันทึก token เมื่อผู้ใช้ล็อกอินสำเร็จ
       }
     });

@@ -15,6 +15,7 @@ import EditProfileScreen from '../screen/EditProfileScreen';
 import { UserContext } from '../api/UserContext';
 import AdminTicketScreen from '../screen/AdminTicketScreen';
 import UserTicketScreen from '../screen/UserTicketScreen';
+import TicketOpen from '../ticketAllScreen/TicketOpenAdmin';
 
 
 
@@ -47,6 +48,7 @@ const HomeStack = ({ navigation }) => (
                 ),
             }}
         />
+
     </Stack.Navigator>
 );
 
@@ -71,10 +73,10 @@ const TicketStack = ({ navigation }) => {
             {role === 'admin' ? (
                 // ถ้า role เป็น admin, แสดงหน้า AdminTicketScreen
                 <Stack.Screen
-                    name="Ticket1"
+                    name="AdminTicket"
                     component={AdminTicketScreen}
                     options={{
-                        headerTitle: 'Create Ticket',
+                        headerTitle: 'Ticket',
                         headerTitleAlign: 'center',
                         headerTitleStyle: {
                             color: theme.textColor,
@@ -100,7 +102,7 @@ const TicketStack = ({ navigation }) => {
                     name="UserTickets"
                     component={UserTicketScreen}
                     options={{
-                        headerTitle: 'Create Ticket',
+                        headerTitle: 'Ticket',
                         headerTitleAlign: 'center',
                         headerTitleStyle: {
                             color: theme.textColor,
@@ -122,20 +124,6 @@ const TicketStack = ({ navigation }) => {
                 />
             )}
 
-            
-        </Stack.Navigator>
-    )
-};
-
-
-const CreateTicketStack = ({ navigation }) => {
-    const { theme } = useTheme();
-    return (
-        <Stack.Navigator
-            screenOptions={{
-                headerStyle: { backgroundColor: theme.backgroundColor },
-            }}
-        >
             <Stack.Screen
                 name="CreateTicket1"
                 component={HomeCreacteTicket}
@@ -150,23 +138,45 @@ const CreateTicketStack = ({ navigation }) => {
                     headerLeft: () => (
                         <View style={{ marginLeft: 10 }}>
                             <Ionicons.Button
-                                name="menu"
+                                name="arrow-back"
                                 size={25}
                                 backgroundColor={theme.backgroundColor}
                                 color={theme.textColor}
-                                onPress={() => navigation.openDrawer()}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
                             />
                         </View>
                     ),
+                }}
+            />
+            <Stack.Screen
+                name="TicketsOpen"
+                component={TicketOpen}
+                options={{
+                    headerTitle: 'My tickets open',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
+                            />
+                        </View>
+                    ),
+
                 }}
             />
 
         </Stack.Navigator>
     )
 };
-
-
-
 
 const KnowledgeStack = ({ navigation }) => (
     <Stack.Navigator
@@ -286,48 +296,85 @@ const AppDrawer = () => (
         }}
     >
         <Drawer.Screen
-            name="Home"
+            name="HomeStack"
             component={HomeStack}
             options={{
+                drawerLabel: "Home",
                 drawerIcon: ({ color }) => (
                     <Ionicons name="home-outline" size={22} color={color} />
                 ),
+                // ใช้ listener เพื่อรีเซ็ตสแต็กไปที่หน้าหลักของ HomeStack
+                listeners: ({ navigation }) => ({
+                    drawerItemPress: () => {
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'HomeStack' }],
+                            })
+                        );
+                    },
+                }),
             }}
         />
         <Drawer.Screen
-            name="Tickets"
+            name="TicketStack"
             component={TicketStack}
             options={{
+                drawerLabel: "Tickets",
                 drawerIcon: ({ color }) => (
                     <Ionicons name="newspaper-outline" size={22} color={color} />
                 ),
+                // ใช้ listener เพื่อรีเซ็ตสแต็กไปที่หน้าหลักของ TicketStack
+                listeners: ({ navigation }) => ({
+                    drawerItemPress: () => {
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'TicketStack' }],
+                            })
+                        );
+                    },
+                }),
             }}
         />
         <Drawer.Screen
-            name="CreateTicket"
-            component={CreateTicketStack}
-            options={{
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="create-outline" size={22} color={color} />
-                ),
-            }}
-        />
-        <Drawer.Screen
-            name="Knowledge"
+            name="KnowledgeStack"
             component={KnowledgeStack}
             options={{
+                drawerLabel: "Knowledge",
                 drawerIcon: ({ color }) => (
                     <Ionicons name="school-outline" size={22} color={color} />
                 ),
+                listeners: ({ navigation }) => ({
+                    drawerItemPress: () => {
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'KnowledgeStack' }],
+                            })
+                        );
+                    },
+                }),
             }}
         />
         <Drawer.Screen
-            name="Profile"
+            name="ProfileStack"
             component={ProfileStack}
             options={{
+                drawerLabel: "Profile",
                 drawerIcon: ({ color }) => (
                     <Ionicons name="person-outline" size={22} color={color} />
                 ),
+                listeners: ({ navigation }) => ({
+                    drawerItemPress: () => {
+                        navigation.dispatch(
+                            CommonActions.reset({
+                                index: 0,
+                                routes: [{ name: 'ProfileStack' }],
+                            })
+                        );
+                    },
+                }),
             }}
         />
     </Drawer.Navigator>

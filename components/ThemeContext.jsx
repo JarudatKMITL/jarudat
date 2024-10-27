@@ -7,8 +7,9 @@ const lightTheme = {
   textColor: '#45484A',
   accentColor: '#ECEFF1',
   iconProfile: '#000',
-  borderColor: '#333333'
-
+  borderColor: '#333333',
+  bghTicket:'#003c82',
+  serviceT:'#FFF',
 };
 
 const darkTheme = {
@@ -16,7 +17,9 @@ const darkTheme = {
   textColor: '#EEEEEE',        // สีข้อความ
   accentColor: '#424242',     // สีตัด
   iconProfile: '#FFF',
-  borderColor: '#ECEFF1'
+  borderColor: '#ECEFF1',
+  bghTicket:'#424242',
+  serviceT:'#9E9E9E',
 
 };
 

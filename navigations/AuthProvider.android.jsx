@@ -62,7 +62,7 @@ export const AuthProvider = ({ children, navigation }) => {
                             }
                         }
 
-                        console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
+                        //console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
 
                         // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
                         const userDocRef = firebase.firestore().collection('users').doc(email);
@@ -74,13 +74,13 @@ export const AuthProvider = ({ children, navigation }) => {
 
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
                         const savedUserDoc = await userDocRef.get();
-                        console.log('Saved role in Firestore:', savedUserDoc.data().role);
+                        //console.log('Saved role in Firestore:', savedUserDoc.data().role);
 
                         // ตั้งค่า user ในแอป
                         setUser(auth().currentUser);
 
 
-                        console.log(`User signed in as ${role}`);
+                        //console.log(`User signed in as ${role}`);
                     }
                     catch (error) {
                         console.error('Error during Google Sign-In: ', error); // ตรวจสอบ error ที่เกิดขึ้น
@@ -218,11 +218,11 @@ export const AuthProvider = ({ children, navigation }) => {
                     const emailTrimmed = email.trim(); // ตัดช่องว่างออกจากอีเมล
 
                     // Log the email being checked
-                    console.log('Email to reset password:', emailTrimmed);
+                    //console.log('Email to reset password:', emailTrimmed);
 
                     try {
                         const signInMethods = await auth().fetchSignInMethodsForEmail(emailTrimmed);
-                        console.log('Sign-in methods:', signInMethods);
+                       // console.log('Sign-in methods:', signInMethods);
 
                         if (signInMethods.length > 0) {
                             Alert.alert('Error', 'No user found with this email.');

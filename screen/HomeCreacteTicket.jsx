@@ -6,6 +6,7 @@ import { AuthContext } from "../navigations/AuthProvider";
 import { UserContext } from '../api/UserContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImagePicker from 'react-native-image-crop-picker';
+import storage from '@react-native-firebase/storage';
 
 const CreateTicketScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
@@ -30,9 +31,19 @@ const CreateTicketScreen = ({ navigation }) => {
   const [resolutionNotes, setResolutionNotes] = useState('');
 
 
+  // ฟังก์ชันสำหรับอัปโหลดรูปภาพไปยัง Firebase Storage
+  const uploadImageToFirebase = async (localPath) => {
+    const filename = `tickets/${user.email}_${new Date().getTime()}.jpg`;
+    const storageRef = storage().ref(filename);
+    await storageRef.putFile(localPath);
+    const url = await storageRef.getDownloadURL();
+    return url;
+  };
+
   const handleCategorySelect = (selectedCategory) => {
     setCategory(selectedCategory); // ตั้งค่า category ที่เลือก
   };
+
   const handleCreateTicket = async () => {
     let errors = {
       title: !title,
@@ -73,6 +84,10 @@ const CreateTicketScreen = ({ navigation }) => {
         setLoading(false);
         return;
       }
+      let imageUrl = null;
+      if (selectedImage) {
+        imageUrl = await uploadImageToFirebase(selectedImage);
+      }
 
       // บันทึกข้อมูลของ ticket ใน Firestore โดยใช้ ticketId เป็น Document ID
       await ticketRef.doc(ticketId).set({
@@ -95,7 +110,7 @@ const CreateTicketScreen = ({ navigation }) => {
         status: 'open', // เริ่มต้นด้วยสถานะ "open"
         dueDate: dueDate || null, // วันที่กำหนดเสร็จ
         estimatedTime: estimatedTime || null, // เวลาโดยประมาณในการแก้ไขปัญหา
-        attachments: selectedImage, // เอกสารหรือรูปภาพที่แนบมา
+        attachments: imageUrl, // เอกสารหรือรูปภาพที่แนบมา
         tags: tags || [], // แท็กหรือป้ายกำกับ
         followUpDetails: followUpDetails || '', // รายละเอียดการติดตาม รับงานโดย
         lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), // วันที่อัปเดตล่าสุด
@@ -177,9 +192,6 @@ const CreateTicketScreen = ({ navigation }) => {
         >
           Please provide details of your request{"\n"} and select the service type.
         </Text>
-
-
-
 
         <View className="my-4">
           {/* กรอบคำบรรยาย */}

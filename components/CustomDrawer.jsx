@@ -5,69 +5,49 @@ import {
   ImageBackground,
   Image,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 import {
   DrawerContentScrollView,
   DrawerItemList,
 } from '@react-navigation/drawer';
-
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
-const CustomDrawer = props => {
+const CustomDrawer = (props) => {
   return (
-    <SafeAreaView className='flex-1 mb-16 '>
-      <DrawerContentScrollView
-        {...props}
-        contentContainerStyle={{backgroundColor: '#1f212c'}}>
+    <SafeAreaView style={styles.container}>
+      <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerContent}>
         <ImageBackground
           source={require('../assets/images/drawer-bg1.jpg')}
-          className='p-5'>
+          style={styles.imageBackground}>
           <Image
             source={require('../assets/images/user-profile.jpg')}
-            className='h-20 w-20 rounded-full mb-3'
+            style={styles.profileImage}
           />
-          <Text className='text-white text-xl mb-1 font-primaryMedium' >
-            Jarudat chaikuad
-          </Text>
-          <View className='flex-row'>
-            <Text className='text-white mr-1 font-primaryLight text-base'>
-              admin : IT
-            </Text>
+          <Text style={styles.userName}>Jarudat chaikuad</Text>
+          <View style={styles.roleContainer}>
+            <Text style={styles.userRole}>admin : IT</Text>
           </View>
         </ImageBackground>
-        <View className='flex-1 bg-white pt-2 '>
+
+        <View style={styles.drawerList}>
           <DrawerItemList {...props} />
         </View>
       </DrawerContentScrollView>
-      
-      
-      <View style={{padding: 20, borderTopWidth: 1, borderTopColor: '#ccc'}}>
-        <TouchableOpacity onPress={() => {}} style={{paddingVertical: 15}}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+
+      <View style={styles.footerContainer}>
+        <TouchableOpacity onPress={() => {}} style={styles.footerButton}>
+          <View style={styles.footerButtonContent}>
             <Ionicons name="share-social-outline" size={22} />
-            <Text
-              style={{
-                fontSize: 15,
-                fontFamily: 'Roboto-Medium',
-                marginLeft: 5,
-              }}>
-              Tell a Friend
-            </Text>
+            <Text style={styles.footerButtonText}>Tell a Friend</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => {}} style={{paddingVertical: 15}}>
-          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <TouchableOpacity onPress={() => {}} style={styles.footerButton}>
+          <View style={styles.footerButtonContent}>
             <Ionicons name="exit-outline" size={22} />
-            <Text
-              style={{
-                fontSize: 15,
-                fontFamily: 'Roboto-Medium',
-                marginLeft: 5,
-              }}>
-              Sign Out
-            </Text>
+            <Text style={styles.footerButtonText}>Sign Out</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -76,3 +56,57 @@ const CustomDrawer = props => {
 };
 
 export default CustomDrawer;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  drawerContent: {
+    backgroundColor: '#1f212c',
+  },
+  imageBackground: {
+    padding: wp('5%'),
+  },
+  profileImage: {
+    height: hp('10%'),
+    width: hp('10%'),
+    borderRadius: hp('5%'),
+    marginBottom: hp('1.5%'),
+  },
+  userName: {
+    color: 'white',
+    fontSize: wp('5%'),
+    marginBottom: hp('0.5%'),
+    fontWeight: '500',
+  },
+  roleContainer: {
+    flexDirection: 'row',
+  },
+  userRole: {
+    color: 'white',
+    fontSize: wp('4%'),
+    fontWeight: '400',
+  },
+  drawerList: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: hp('1%'),
+  },
+  footerContainer: {
+    padding: wp('5%'),
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+  },
+  footerButton: {
+    paddingVertical: hp('1.5%'),
+  },
+  footerButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerButtonText: {
+    fontSize: wp('4%'),
+    fontFamily: 'Roboto-Medium',
+    marginLeft: wp('1.5%'),
+  },
+});

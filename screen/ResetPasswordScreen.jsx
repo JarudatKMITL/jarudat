@@ -1,49 +1,109 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { AuthContext } from "../navigations/AuthProvider";
-import ForgetIcon from '../assets/images/forgot.svg'
+import ForgetIcon from '../assets/images/forgot.svg';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 
 const ResetPasswordScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const { resetPassword } = useContext(AuthContext);
 
     return (
-        <View className='flex-1 p-5 bg-bgblue'>
-            <View className='justify-center items-center m-10'>
-                <ForgetIcon widht={220} height={220} />
+        <View style={styles.container}>
+            <View style={styles.iconContainer}>
+                <ForgetIcon width={wp('55%')} height={hp('30%')} />
             </View>
-            <Text className='text-5xl font-Bold my-3 '>Forget</Text>
-            <Text className='text-5xl font-Bold mt-2 '>Password?</Text>
-            <View className='flex-row border-b-2 border-accnet my-5 items-center mb-10 mx-2'>
+
+            <Text style={styles.title}>Forget</Text>
+            <Text style={styles.title}>Password?</Text>
+
+            <View style={styles.inputContainer}>
                 <Ionicons name={"mail-outline"} size={30} color={'#AEB5BB'} />
                 <TextInput
-                    className='flex-row font-Medium text-lg ml-3 mt-2 '
-                    placeholder="Enter your email address         "
+                    style={styles.inputText}
+                    placeholder="Enter your email address"
                     value={email}
                     onChangeText={(text) => setEmail(text)}
                     keyboardType="email-address"
                     autoCapitalize="none"
                 />
             </View>
+
             <TouchableOpacity
                 onPress={() => resetPassword(email)}
-                className='bg-primary rounded-full '
+                style={styles.resetButton}
             >
-                <Text className='text-[20px] font-SemiBold text-white text-center p-4  '>Send Reset Email</Text>
+                <Text style={styles.resetButtonText}>Send Reset Email</Text>
             </TouchableOpacity>
-            <View className=' flex-row py-5 justify-center'>
-                <Text className='text-[20px] mr-2'>Don’t have an account?</Text>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('Login')}
-                >
-                    <Text className='text-[20px] font-Bold'>Login</Text>
+
+            <View style={styles.footerContainer}>
+                <Text style={styles.footerText}>Don’t have an account?</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                    <Text style={styles.loginText}>Login</Text>
                 </TouchableOpacity>
             </View>
-
-
         </View>
     );
 }
 
 export default ResetPasswordScreen;
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        padding: wp('5%'),
+        backgroundColor: '#e5eff8',
+    },
+    iconContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginVertical: hp('5%'),
+    },
+    title: {
+        fontSize: wp('10%'),
+        fontWeight: 'bold',
+        color: '#45484A',
+        marginBottom: hp('1%'),
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 2,
+        borderBottomColor: '#AEB5BB',
+        marginVertical: hp('3%'),
+        paddingHorizontal: wp('2%'),
+    },
+    inputText: {
+        flex: 1,
+        fontSize: wp('4.5%'),
+        marginLeft: wp('2%'),
+        color: '#45484A',
+        fontWeight: '500',
+    },
+    resetButton: {
+        backgroundColor: '#45484A',
+        borderRadius: wp('5%'),
+        marginVertical: hp('2%'),
+        paddingVertical: hp('1.5%'),
+    },
+    resetButtonText: {
+        fontSize: wp('5%'),
+        color: 'white',
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    footerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: hp('3%'),
+    },
+    footerText: {
+        fontSize: wp('4.5%'),
+        marginRight: wp('1%'),
+    },
+    loginText: {
+        fontSize: wp('4.5%'),
+        fontWeight: 'bold',
+    },
+});

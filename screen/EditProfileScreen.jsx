@@ -1,19 +1,18 @@
 import React, { useContext, useState, useEffect } from 'react';
-import { Alert, View, Modal, Pressable, TouchableOpacity, Switch, StatusBar, ScrollView, Button, RefreshControl, TextInput, ActivityIndicator } from 'react-native';
-import { Avatar, Title, Caption, Text, } from 'react-native-paper';
+import { Alert, View, Modal, Pressable, TouchableOpacity, StatusBar, ScrollView, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
+import { Avatar, Text } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon1 from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import { firebase } from '@react-native-firebase/firestore';
 import ImagePicker from 'react-native-image-crop-picker';
-import { useTheme } from '../components/ThemeContext'; // Adjust the path accordingly
+import { useTheme } from '../components/ThemeContext';
 import { AuthContext } from "../navigations/AuthProvider";
-
-
-
+import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
+import storage from '@react-native-firebase/storage';
 
 const EditProfileScreen = ({ navigation }) => {
-    const { theme ,colorScheme} = useTheme(); // Accessing the theme and toggle function
+    const { theme, colorScheme } = useTheme(); // Accessing the theme and toggle function
     const { user } = useContext(AuthContext);
     const [modalVisible, setModalVisible] = useState(false);
     const [profileImage, setProfileImage] = useState(user.photoURL);
@@ -51,7 +50,16 @@ const EditProfileScreen = ({ navigation }) => {
         fetchUserProfile(); // ดึงข้อมูลเมื่อ component ถูกโหลดครั้งแรก
     }, [user]);
 
-    // ฟังก์ชันสำหรับเลือกจากแกลเลอรี่พร้อมครอปรูป
+    // ฟังก์ชันสำหรับอัปโหลดรูปภาพไปยัง Firebase Storage
+    const uploadImageToFirebase = async (localPath) => {
+        const filename = `${user.email}_profile_${new Date().getTime()}.jpg`;
+        const storageRef = storage().ref(`profileImages/${filename}`);
+        await storageRef.putFile(localPath);
+        const url = await storageRef.getDownloadURL();
+        return url;
+    };
+
+    // ฟังก์ชันสำหรับเลือกจากแกลเลอรี่
     const selectImageFromLibrary = () => {
         ImagePicker.openPicker({
             cropping: true,
@@ -59,14 +67,14 @@ const EditProfileScreen = ({ navigation }) => {
             height: 300,
         })
             .then(image => {
-                setSelectedImage(image.path); // แสดงรูปที่เลือกทันที
-                setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
-                setModalVisible(false); // ปิด Modal
+                setSelectedImage(image.path); // เก็บพาธรูปในเครื่อง
+                setProfileImage(image.path); // อัปเดต UI
+                setModalVisible(false);
             })
             .catch(error => console.log('Error picking image: ', error));
     };
 
-    // ฟังก์ชันสำหรับถ่ายรูปพร้อมครอปรูป
+    // ฟังก์ชันสำหรับถ่ายรูป
     const takePhotoWithCamera = () => {
         ImagePicker.openCamera({
             cropping: true,
@@ -75,13 +83,12 @@ const EditProfileScreen = ({ navigation }) => {
             height: 300,
         })
             .then(image => {
-                setSelectedImage(image.path); // แสดงรูปที่ถ่ายทันที
-                setProfileImage(image.path); // อัปเดตรูปโปรไฟล์ใน UI ทันที
-                setModalVisible(false); // ปิด Modal
+                setSelectedImage(image.path); // เก็บพาธรูปในเครื่อง
+                setProfileImage(image.path); // อัปเดต UI
+                setModalVisible(false);
             })
             .catch(error => console.log('Error capturing image: ', error));
     };
-
     // ฟังก์ชันบันทึกข้อมูลไปยัง Firebase เมื่อกดปุ่มบันทึก
     const [errorFields, setErrorFields] = useState({
         displayName: false,
@@ -92,7 +99,6 @@ const EditProfileScreen = ({ navigation }) => {
     }); // จัดเก็บสถานะของฟิลด์ที่มีข้อผิดพลาด
 
     const handleSaveProfile = async () => {
-        // ตรวจสอบว่าช่องไหนว่าง
         const errors = {
             displayName: !displayName.trim(),
             phone: !phone,
@@ -103,32 +109,37 @@ const EditProfileScreen = ({ navigation }) => {
 
         setErrorFields(errors);
 
-        // ถ้ามีข้อผิดพลาดในฟิลด์ใดฟิลด์หนึ่งจะไม่ดำเนินการต่อ
         if (Object.values(errors).some(error => error)) {
             Alert.alert('Please fill out all required fields');
             return;
         }
 
-        setLoading(true); // แสดงการหมุนเมื่อเริ่มบันทึก
+        setLoading(true);
         try {
             const userDocRef = firebase.firestore().collection('users').doc(user.email);
 
-            // อัปเดตข้อมูลผู้ใช้ไปยัง Firestore
+            let imageUrl = profileImage;
+
+            // ถ้ามีการเลือกรูปใหม่ จะอัปโหลดไปยัง Firebase Storage
+            if (selectedImage) {
+                imageUrl = await uploadImageToFirebase(selectedImage);
+            }
+
+            // อัปเดตข้อมูลไปยัง Firestore
             await userDocRef.update({
                 name: displayName,
                 phone: phone,
                 company: company,
                 department: department,
                 description: description,
-                profileImage: selectedImage || profileImage // อัพเดทรูปภาพถ้ามีการเลือกใหม่
+                profileImage: imageUrl // เก็บลิงก์ของรูปภาพที่อัปโหลด
             });
 
-            // ถ้ามีการเลือกรูปภาพใหม่ก็อัปเดต Firebase Authentication
             if (selectedImage) {
                 await user.updateProfile({
-                    photoURL: selectedImage,
+                    photoURL: imageUrl,
                 });
-                setProfileImage(selectedImage); // อัปเดต UI ด้วยรูปใหม่
+                setProfileImage(imageUrl); // อัปเดต UI
             }
 
             navigation.navigate('Profile1');
@@ -137,28 +148,26 @@ const EditProfileScreen = ({ navigation }) => {
             console.log('Error updating profile:', error);
             Alert.alert('Failed to update profile. Try again later.');
         } finally {
-            setLoading(false); // ปิดการแสดงหมุนเมื่อบันทึกเสร็จ
+            setLoading(false);
         }
     };
     // ฟังก์ชันลบรูปภาพโปรไฟล์ทั้งใน UI และ Firebase
     const handleRemoveProfileImage = async () => {
         try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.uid);
+            const userDocRef = firebase.firestore().collection('users').doc(user.email);
 
-            // ตั้งค่า profileImage เป็น null ใน Firestore
             await userDocRef.update({
                 profileImage: null,
             });
 
-            // อัปเดต Firebase Authentication ให้เป็น null ด้วย
             await user.updateProfile({
                 photoURL: null,
             });
 
-            setProfileImage(null); // ลบภาพจาก UI
-            setSelectedImage(null); // ลบภาพที่เลือกจาก state
+            setProfileImage(null);
+            setSelectedImage(null);
             Alert.alert('Profile image removed successfully!');
-            setModalVisible(false); // ปิด Modal
+            setModalVisible(false);
         } catch (error) {
             console.log('Error removing profile image: ', error);
             Alert.alert('Failed to remove profile image. Try again later.');
@@ -185,239 +194,243 @@ const EditProfileScreen = ({ navigation }) => {
         );
     };
 
+    const styles = StyleSheet.create({
+        container: {
+            marginVertical: hp('2%'),
+            alignItems: 'center'
+        },
+        avatarContainer: {
+            position: 'relative'
+        },
+        scrollView: {
+            backgroundColor: theme.backgroundColor
+        },
+        avatarSection: {
+            marginVertical: 20,
+            alignItems: 'center'
+        },
+        cameraButton: {
+            position: 'absolute',
+            bottom: wp('0%'),
+            right: wp('0%'),
+            padding: wp('2%'),
+            borderRadius: wp('50%')
+        },
+        inputContainer: {
+            marginHorizontal: 20,
+            marginTop: 10,
+
+        },
+        label: {
+            color: theme.textColor,
+            fontSize: 16,
+            marginBottom: 5,
+            fontFamily: 'Poppins-Bold',
+        },
+        inputBox: (hasError) => ({
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: theme.accentColor,
+            height: 60,
+            borderRadius: 10,
+            paddingHorizontal: 15,
+            borderColor: hasError ? 'red' : theme.accentColor,
+            borderWidth: 1,
+        }),
+        textInput: {
+            flex: 1,
+            fontSize: 16,
+            color: theme.textColor,
+            marginLeft: 10,
+            fontFamily: 'Poppins-Light',
+        },
+        submitButtonContainer: {
+            alignItems: 'center'
+            , marginVertical: 20
+        },
+        submitButton: {
+            backgroundColor: '#4CAF50',
+            borderRadius: 50,
+            paddingVertical: 15,
+            paddingHorizontal: 30,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.8,
+            shadowRadius: 2,
+            elevation: 5,
+        },
+        submitButtonText: {
+            fontSize: 20,
+            color: '#FFF',
+            fontWeight: 'bold'
+        },
+        loadingOverlay: {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        },
+        // Modal styles
+        modalBackground: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+        },
+        modalContainer: {
+            width: wp('80%'),
+            backgroundColor: 'white',
+            borderRadius: wp('4%'),
+            padding: hp('2%')
+        },
+        modalTitle: {
+            textAlign: 'center',
+            fontSize: wp('5%'),
+            fontWeight: 'bold',
+            marginBottom: hp('2%')
+        },
+    });
+
     return (
-        <ScrollView
-            classname='flex-1 p-0 mb-20'
-            style={{ backgroundColor: theme.backgroundColor }}
-        >
-            <StatusBar
-                barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} // or "dark-content"
-                backgroundColor={theme.backgroundColor} // Set this to match your header
-            />
+        <ScrollView style={styles.scrollView}>
+            <StatusBar barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} backgroundColor={theme.backgroundColor} />
 
-            <View className='my-8'>
-                <View className='flex items-center'>
-                    <View className="relative">
-                        <Avatar.Image
-                            source={{
-                                uri: profileImage ? profileImage : 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59'
-                            }}
-                            size={150}
-                        />
-                        <TouchableOpacity
-                            onPress={() => setModalVisible(true)}
-                            className="absolute bottom-0 right-0 bg-black p-1 rounded-full" style={{ backgroundColor: theme.backgroundColor }}>
-                            <Icon1 name="camera-outline" size={40} color={theme.iconProfile} />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                <View className='mx-7 mt-10' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Full Name</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{
-                            backgroundColor: theme.accentColor,
-                            borderColor: errorFields.displayName ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
-                            borderWidth: 1
-                        }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5'
-                            value={displayName}
-                            onChangeText={setDisplayName}
-                            placeholder={displayName ? displayName: "your name    "}
-                            placeholderTextColor={theme.textColor}
-                            keyboardType="email-address"
-                        />
-                    </View>
-                </View>
-
-                <View className='mx-7 mt-5' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Nick Name</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{
-                            backgroundColor: theme.accentColor,
-                            borderColor: errorFields.description ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
-                            borderWidth: 1
-                        }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5 items-center mt-1'
-                            value={description}
-                            onChangeText={setDescription}
-                            placeholder={description ? description : 'Nick Name   '}
-                            placeholderTextColor={'#AEB5BB'}
-                            keyboardType="email-address"
-                        />
-                    </View>
-                </View>
-                <View className='mx-7 mt-5' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Email</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{ backgroundColor: theme.accentColor }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5 items-center mt-1'
-                            value={email}
-                            onChangeText={setEmail}
-                            placeholder={email}
-                            placeholderTextColor={'#AEB5BB'}
-                            keyboardType="email-address"
-                            editable={false}
-                        />
-                    </View>
-                </View>
-                <View className='mx-7 mt-5' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Phone</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{
-                            backgroundColor: theme.accentColor,
-                            borderColor: errorFields.phone ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
-                            borderWidth: 1
-                        }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5 items-center mt-1'
-                            value={phone}
-                            onChangeText={setPhone}
-                            placeholder={phone ? phone : 'Phone  '}
-                            placeholderTextColor={'#AEB5BB'}
-                            keyboardType="number-pad"
-                        />
-                    </View>
-                </View>
-                <View className='mx-7 mt-5' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Company</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{
-                            backgroundColor: theme.accentColor,
-                            borderColor: errorFields.company ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
-                            borderWidth: 1
-                        }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5 items-center mt-1'
-                            value={company}
-                            onChangeText={setCompany}
-                            placeholder={company ? company : ' Your company    '}
-                            placeholderTextColor={'#AEB5BB'}
-                        />
-                    </View>
-                </View>
-
-                <View className='mx-7 mt-5' >
-                    <Text className='text-lg font-Medium mb-3' style={{ color: theme.textColor }}>Department</Text>
-                    <View
-                        className='flex-row justify-between  h-16 items-center mb-1 rounded-lg'
-                        style={{
-                            backgroundColor: theme.accentColor,
-                            borderColor: errorFields.department ? 'red' : theme.accentColor, // ขอบเป็นสีแดงถ้าฟิลด์ว่าง
-                            borderWidth: 1
-                        }}>
-                        <View className='ml-7 flex-row'>
-                            <Icon name="phone-outline" color={theme.iconProfile} size={25} />
-                        </View>
-                        <TextInput
-                            style={{ color: theme.textColor }}
-                            className='font-Medium text-xl mr-5 items-center mt-1'
-                            value={department}
-                            onChangeText={setDepartment}
-                            placeholder={department ? department : ' Your Department    '}
-                            placeholderTextColor={'#AEB5BB'}
-                        />
-                    </View>
-                </View>
-
-
-                <View className='flex  items-center justify-center mt-4 mb-4' >
-                    <TouchableOpacity
-                        style={{
-                            backgroundColor: '#4CAF50', // สีเขียวสด
-                            borderRadius: 50, // ปัดมุมให้โค้งมน
-                            paddingVertical: 15,
-                            paddingHorizontal: 30,
-                            marginTop: 20,
-                            shadowColor: '#000', // เพิ่มเงา
-                            shadowOffset: { width: 0, height: 2 },
-                            shadowOpacity: 0.8,
-                            shadowRadius: 2,
-                            elevation: 5, // เงาสำหรับ Android
-                        }}
-                        onPress={handleSaveProfile}
-                        disabled={loading} // ปิดปุ่มเมื่อบันทึกอย
-                    >
-
-
-                        <Text className='text-xl font-Bold'>Submit</Text>
+            <View style={styles.container}>
+                <View style={styles.avatarContainer}>
+                    <Avatar.Image source={{ uri: profileImage || 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg' }} size={wp('30%')} />
+                    <TouchableOpacity onPress={() => setModalVisible(true)} style={[styles.cameraButton, { backgroundColor: theme.backgroundColor }]}>
+                        <Icon1 name="camera-outline" size={wp('6%')} color={theme.iconProfile} />
                     </TouchableOpacity>
                 </View>
-
             </View>
 
-            {/* Loading Indicator */}
+
+            {/* All input fields */}
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Full Name</Text>
+                <View style={styles.inputBox(errorFields.displayName)}>
+                    <Icon name="account-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={displayName}
+                        onChangeText={setDisplayName}
+                        placeholder="Your name"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Nick Name</Text>
+                <View style={styles.inputBox(errorFields.description)}>
+                    <Icon name="account-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={description}
+                        onChangeText={setDescription}
+                        placeholder="Nick Name"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email</Text>
+                <View style={styles.inputBox(false)}>
+                    <Icon name="email-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Email"
+                        placeholderTextColor={theme.textColor}
+                        editable={false}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Phone</Text>
+                <View style={styles.inputBox(errorFields.phone)}>
+                    <Icon name="phone-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="Phone"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Company</Text>
+                <View style={styles.inputBox(errorFields.company)}>
+                    <Icon name="office-building-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={company}
+                        onChangeText={setCompany}
+                        placeholder="Company"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Department</Text>
+                <View style={styles.inputBox(errorFields.department)}>
+                    <Icon name="account-group-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={department}
+                        onChangeText={setDepartment}
+                        placeholder="Department"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.submitButtonContainer}>
+                <TouchableOpacity style={styles.submitButton} onPress={handleSaveProfile} disabled={loading}>
+                    <Text style={styles.submitButtonText}>Submit</Text>
+                </TouchableOpacity>
+            </View>
+
             {loading && (
-                <View style={{
-                    position: 'absolute', // ตำแหน่งกลางจอ
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    justifyContent: 'center', alignItems: 'center',
-                    backgroundColor: 'rgba(0,0,0,0.5)' // สีพื้นหลังโปร่งแสง
-                }}>
+                <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#FFF" />
                 </View>
             )}
 
-            <Modal
-                transparent={true}
-                visible={modalVisible}
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View className="flex-1 justify-center items-center bg-black/50">
-                    <View className="w-80 bg-white rounded-lg p-5">
-                        <Text className="text-center text-xl font-bold mb-4">Profile Photo</Text>
-                        <View className="flex-row justify-around">
-                            {/* Camera Option */}
-                            <Pressable onPress={takePhotoWithCamera} className="items-center">
-                                <Icon1 name="camera-outline" size={40} color="#FFC107" />
-                                <Text className="mt-1">Camera</Text>
+            {/* Modal for Profile Picture */}
+            <Modal transparent={true} visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
+                <View style={styles.modalBackground}>
+                    <View style={styles.modalContainer}>
+                        <Text style={styles.modalTitle}>Profile Photo</Text>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around' }}>
+                            <Pressable onPress={takePhotoWithCamera} style={styles.iconButton}>
+                                <Icon1 name="camera-outline" size={wp('10%')} color="#FFC107" />
+                                <Text style={styles.iconText}>Camera</Text>
                             </Pressable>
-                            {/* Gallery Option */}
-                            <Pressable onPress={selectImageFromLibrary} className="items-center">
-                                <Icon2 name="photo-library" size={40} color="#FFC107" />
-                                <Text className="mt-1">Gallery</Text>
+                            <Pressable onPress={selectImageFromLibrary} style={styles.iconButton}>
+                                <Icon2 name="photo-library" size={wp('10%')} color="#FFC107" />
+                                <Text style={styles.iconText}>Gallery</Text>
                             </Pressable>
-                            {/* Remove Option */}
-                            <Pressable onPress={confirmRemoveImage} className="items-center">
-                                <Icon name="delete" size={40} color="#FF3D00" />
-                                <Text className="mt-1">Remove</Text>
+                            <Pressable onPress={confirmRemoveImage} style={styles.iconButton}>
+                                <Icon name="delete" size={wp('10%')} color="#FF3D00" />
+                                <Text style={styles.iconText}>Remove</Text>
                             </Pressable>
                         </View>
                     </View>
                 </View>
             </Modal>
-
         </ScrollView>
-    )
-}
+    );
+};
 
 export default EditProfileScreen;
