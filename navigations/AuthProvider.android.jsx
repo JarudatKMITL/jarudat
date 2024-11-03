@@ -47,7 +47,10 @@ export const AuthProvider = ({ children, navigation }) => {
                         // สร้าง credential สำหรับ Firebase จาก Google idToken
                         const credential = auth.GoogleAuthProvider.credential(idToken);
                         const userCredential = await auth().signInWithCredential(credential); // ลงชื่อเข้าใช้ Firebase
-                        const { email, uid } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
+                        const { email, uid ,displayName,photoURL } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
+                       
+
+
                         // ตรวจสอบอีเมลและกำหนดบทบาท (role)
                         // ตรวจสอบบทบาทจาก Firestore คอลเลคชัน "roles"
                         const roleDocRef = firebase.firestore().collection('roles').doc(email); // ใช้อีเมลเป็นไอดีในคอลเลคชัน
@@ -70,6 +73,9 @@ export const AuthProvider = ({ children, navigation }) => {
                             email: email,
                             role: role,  // บทบาทจากการตรวจสอบ
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            displayName: displayName, // ชื่อจาก Facebook
+                            profileImage: photoURL, // รูปโปรไฟล์จาก Facebook 
+
                         });
 
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
@@ -88,7 +94,10 @@ export const AuthProvider = ({ children, navigation }) => {
                 },
                 fbLogin: async () => {
                     try {
+                        // ล้างข้อมูลการเข้าสู่ระบบ
+                        await LoginManager.logOut();
                         // Attempt login with permissions
+
                         const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
 
                         if (result.isCancelled) {
@@ -101,6 +110,9 @@ export const AuthProvider = ({ children, navigation }) => {
                         if (!data) {
                             throw 'Something went wrong obtaining access token';
                         }
+                        if (!data.accessToken) {
+                            throw 'Access token is null';
+                        }
 
                         console.log('Access Token:', data.accessToken); // ตรวจสอบค่าที่ได้
 
@@ -111,7 +123,7 @@ export const AuthProvider = ({ children, navigation }) => {
                         const userCredential = await auth().signInWithCredential(facebookCredential);
 
                         const { email, uid } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
-
+                        const facebookProfile = userCredential.additionalUserInfo.profile;
                         // ตรวจสอบบทบาทจาก Firestore คอลเลคชั่น "roles"
                         const roleDocRef = firebase.firestore().collection('roles').doc(email); // ใช้อีเมลเป็นไอดีในคอลเลคชัน
                         const roleDoc = await roleDocRef.get();
@@ -127,13 +139,19 @@ export const AuthProvider = ({ children, navigation }) => {
 
                         console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
 
+                        const displayName = facebookProfile.name;
+                        const profileImage = facebookProfile.picture.data.url;
+
                         // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
                         const userDocRef = firebase.firestore().collection('users').doc(email);
 
                         await userDocRef.set({
                             email: email,
                             role: role,  // บทบาทจากการตรวจสอบ
+                            displayName: displayName, // ชื่อจาก Facebook
+                            profileImage: profileImage, // รูปโปรไฟล์จาก Facebook
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+
                         });
 
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
@@ -189,6 +207,8 @@ export const AuthProvider = ({ children, navigation }) => {
                             email: email,
                             role: role,  // บทบาทที่ถูกตรวจสอบ
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            profileImage: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59',
+                            displayName: 'Untitled',
                         });
 
 
@@ -222,7 +242,7 @@ export const AuthProvider = ({ children, navigation }) => {
 
                     try {
                         const signInMethods = await auth().fetchSignInMethodsForEmail(emailTrimmed);
-                       // console.log('Sign-in methods:', signInMethods);
+                        // console.log('Sign-in methods:', signInMethods);
 
                         if (signInMethods.length > 0) {
                             Alert.alert('Error', 'No user found with this email.');
@@ -242,10 +262,28 @@ export const AuthProvider = ({ children, navigation }) => {
                 },
                 logout: async () => {
                     try {
+                        // ออกจากระบบ Firebase ก่อน
                         await auth().signOut();
-                    }
-                    catch (e) {
-                        console.log(e);
+                        console.log("User logged out from Firebase");
+                        // ล้างข้อมูล Local Storage เพื่อรีเซ็ตสถานะของแอป
+                        await AsyncStorage.clear(); // ล้างข้อมูลที่จัดเก็บใน AsyncStorage
+                        console.log("Local Storage cleared");
+                        // Facebook Logout ก่อน Google Logout
+                        const facebookToken = await AccessToken.getCurrentAccessToken();
+                        if (facebookToken) {
+                            await LoginManager.logOut(); // Facebook logout
+                            console.log("Logged out of Facebook successfully");
+                        } else {
+                            console.log("No Facebook login session found");
+                        }
+
+                        // Google Logout หลังจาก Facebook Logout
+                        await GoogleSignin.revokeAccess(); // รีเซ็ตสิทธิ์การเข้าถึง Google
+                        await GoogleSignin.signOut(); // Google logout
+                        console.log("Google account revoked and signed out");
+
+                    } catch (e) {
+                        console.log("Error during logout process:", e);
                     }
                 }
             }}

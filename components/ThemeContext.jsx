@@ -8,8 +8,18 @@ const lightTheme = {
   accentColor: '#ECEFF1',
   iconProfile: '#000',
   borderColor: '#333333',
-  bghTicket:'#003c82',
-  serviceT:'#FFF',
+  bghTicket: '#003c82',
+  serviceT: '#FFF',
+  //ส่วนรับงาน
+  background: '#f0f0f0',
+  text: '#333',
+  button: '#007bff',
+  buttonText: '#fff',
+  modalBackground: '#ffffff',
+  cardBackground: '#ffffff',
+  headerBackground: '#ffffff',
+  shadowColor: '#000',
+
 };
 
 const darkTheme = {
@@ -18,8 +28,17 @@ const darkTheme = {
   accentColor: '#424242',     // สีตัด
   iconProfile: '#FFF',
   borderColor: '#ECEFF1',
-  bghTicket:'#424242',
-  serviceT:'#9E9E9E',
+  bghTicket: '#424242',
+  serviceT: '#9E9E9E',
+  //ส่วนรับงาน
+  background: '#121212',
+  text: '#f0f0f0',
+  button: '#1a73e8',
+  buttonText: '#f0f0f0',
+  modalBackground: '#333333',
+  cardBackground: '#1e1e1e',
+  headerBackground: '#333333',
+  shadowColor: '#000',
 
 };
 

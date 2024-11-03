@@ -5,10 +5,8 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 import { AuthContext } from '../navigations/AuthProvider.android';
 import { UserContext } from '../api/UserContext';
 import { useTheme } from '../components/ThemeContext';
-import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 
 const AdminTicketScreen = ({ navigation }) => {
-  const { user } = useContext(AuthContext);
   const { role, email, profileImage, displayName } = useContext(UserContext);
   const { theme, toggleColorScheme, colorScheme } = useTheme();
 
@@ -99,7 +97,7 @@ const AdminTicketScreen = ({ navigation }) => {
         barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'} // or "dark-content"
         backgroundColor={theme.backgroundColor} // Set this to match your header
       />
-      {/* Header */}
+      {/* Header */} 
       <View style={styles.header}>
         <View style={styles.userInfo}>
           <Text style={styles.greeting}>Hello</Text>
@@ -126,16 +124,17 @@ const AdminTicketScreen = ({ navigation }) => {
             <Text style={styles.serviceLabel}>Create new ticket</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-          style={styles.serviceItem}
-          onPress={() => navigation.navigate('TicketsOpen')}>
+          <TouchableOpacity
+            style={styles.serviceItem}
+            onPress={() => navigation.navigate('TakeOwnership')}>
             <Image source={require('../assets/images/ticketOpen.png')} style={styles.serviceIcon} />
-            <Text style={styles.serviceLabel}>Ticket Open</Text>
+            <Text style={styles.serviceLabel}>Take Ownership</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.serviceGrid}>
-          <TouchableOpacity style={styles.serviceItem}>
+          <TouchableOpacity style={styles.serviceItem}
+            onPress={() => navigation.navigate('InProgress')}>
             <Image source={require('../assets/images/inProgress.png')} style={styles.serviceIcon} />
             <Text style={styles.serviceLabel}>Ticket In Progress</Text>
           </TouchableOpacity>

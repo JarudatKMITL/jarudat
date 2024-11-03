@@ -1,52 +1,122 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { firebase } from '@react-native-firebase/firestore';
-import { useContext } from 'react';
-import { AuthContext } from '../navigations/AuthProvider'; // Import AuthProvider ของคุณ
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AuthContext } from '../navigations/AuthProvider';
 
-// สร้าง Context
 export const UserContext = createContext();
 
-// สร้าง Provider ที่จะห่อหุ้ม component ต่าง ๆ เพื่อให้เข้าถึงข้อมูลผู้ใช้
 export const UserProvider = ({ children }) => {
-    const { user } = useContext(AuthContext); // ใช้ข้อมูลจาก AuthContext สำหรับข้อมูลผู้ใช้ที่ล็อกอิน
+    const { user } = useContext(AuthContext);
     const [profileImage, setProfileImage] = useState(null);
     const [displayName, setDisplayName] = useState(null);
     const [email, setEmail] = useState(null);
     const [phone, setPhone] = useState(null);
     const [company, setCompany] = useState(null);
     const [department, setDepartment] = useState(null);
-    const [description, setDescription] = useState(null);
-    const [role, setRole] = useState('user'); // ตั้งค่า role เป็น user โดยดีฟอลต์
+    const [nickName, setNickName] = useState(null);
+    const [employeeID, setEmployeeID] = useState(null);
+    const [role, setRole] = useState('user');
     const [loading, setLoading] = useState(true);
 
-    // ฟังก์ชันดึงข้อมูลผู้ใช้จาก Firestore
-    const fetchUserProfile = async () => {
+    // โหลดข้อมูลจากแคชเมื่อแอปเริ่มต้น
+    const loadCachedUserData = async () => {
         try {
-            if (user) {
-                const userDocRef = firebase.firestore().collection('users').doc(user.email);
-                const doc = await userDocRef.get();
-                if (doc.exists) {
-                    const userData = doc.data();
-                    // อัปเดต state ด้วยข้อมูลผู้ใช้จาก Firestore
-                    setProfileImage(userData.profileImage || 'https://defaultimage.com/default.jpg');
-                    setDisplayName(userData.name || user.displayName);
-                    setEmail(userData.email || user.email);
-                    setPhone(userData.phone || null);
-                    setCompany(userData.company || null);
-                    setDepartment(userData.department || null);
-                    setDescription(userData.description || 'Nick Name');
-                    setRole(userData.role || 'user'); // ถ้าไม่มี role ในฐานข้อมูล จะถือว่าเป็น user
-                    setLoading(false);
-                }
+            const cachedUserData = await AsyncStorage.getItem('userProfile');
+            if (cachedUserData) {
+                const parsedData = JSON.parse(cachedUserData);
+                setProfileImage(parsedData.profileImage);
+                setDisplayName(parsedData.displayName);
+                setEmail(parsedData.email);
+                setPhone(parsedData.phone);
+                setCompany(parsedData.company);
+                setDepartment(parsedData.department);
+                setNickName(parsedData.nickName);
+                setRole(parsedData.role);
+                setEmployeeID(parsedData.employeeID || null);
             }
         } catch (error) {
-            console.log('Error fetching user profile:', error);
+            console.log('Error loading cached user data:', error);
+        } finally {
+            setLoading(false); // ปิด loading ไม่ว่าจะสำเร็จหรือไม่
         }
     };
 
-    // เรียกใช้เมื่อ component ถูก mount (หรือเมื่อ user เปลี่ยนแปลง)
+    // เก็บข้อมูลในแคชเมื่อมีการอัปเดตข้อมูลใหม่
+    const cacheUserData = async (data) => {
+        try {
+            await AsyncStorage.setItem('userProfile', JSON.stringify(data));
+        } catch (error) {
+            console.log('Error caching user data:', error);
+        }
+    };
+
+    // ฟังก์ชันดึงข้อมูลผู้ใช้จาก Firestore
+    const fetchUserProfile = async () => {
+        if (!user) return;
+
+        const userDocRef = firebase.firestore().collection('users').doc(user.email);
+        const doc = await userDocRef.get();
+        
+        if (doc.exists) {
+            const userData = doc.data();
+            setProfileImage(userData.profileImage);
+            setDisplayName(userData.displayName);
+            setEmail(userData.email);
+            setPhone(userData.phone || null);
+            setCompany(userData.company || null);
+            setDepartment(userData.department || null);
+            setNickName(userData.nickName || null);
+            setRole(userData.role || 'user');
+            setEmployeeID(userData.employeeID || null);
+            
+            // เก็บข้อมูลใหม่ลงในแคช
+            cacheUserData(userData);
+        }
+    };
+
+    // ฟังก์ชันรีเฟรชข้อมูลผู้ใช้
+    const refreshUserProfile = async () => {
+        setLoading(true); // ตั้งค่า loading ให้เป็น true
+        await fetchUserProfile(); // ดึงข้อมูลใหม่จาก Firestore
+        setLoading(false); // ตั้งค่า loading กลับเป็น false
+    };
+
     useEffect(() => {
-        fetchUserProfile();
+        if (!user) return;
+
+        setLoading(true);
+        loadCachedUserData(); // โหลดข้อมูลจากแคชตอนเริ่มต้น
+
+        const userDocRef = firebase.firestore().collection('users').doc(user.email);
+        
+        const unsubscribe = userDocRef.onSnapshot(async (doc) => {
+            if (doc.exists) {
+                const userData = doc.data();
+                const cachedUserData = await AsyncStorage.getItem('userProfile');
+                const parsedCachedData = cachedUserData ? JSON.parse(cachedUserData) : {};
+
+                // ตรวจสอบว่าข้อมูลใหม่ตรงกับข้อมูลในแคชหรือไม่
+                if (JSON.stringify(userData) !== JSON.stringify(parsedCachedData)) {
+                    setProfileImage(userData.profileImage);
+                    setDisplayName(userData.displayName);
+                    setEmail(userData.email);
+                    setPhone(userData.phone || null);
+                    setCompany(userData.company || null);
+                    setDepartment(userData.department || null);
+                    setNickName(userData.nickName || null);
+                    setRole(userData.role || 'user');
+                    setEmployeeID(userData.employeeID || null);
+                    
+                    cacheUserData(userData); // เก็บข้อมูลใหม่ลงในแคช
+                }
+            }
+            setLoading(false); // ปิด loading เมื่อโหลดข้อมูลเสร็จ
+        }, (error) => {
+            console.log('Error fetching user profile:', error);
+            setLoading(false);
+        });
+
+        return () => unsubscribe();
     }, [user]);
 
     return (
@@ -58,17 +128,18 @@ export const UserProvider = ({ children }) => {
                 phone,
                 company,
                 department,
-                description,
+                nickName,
                 role,
                 loading,
+                employeeID,
+                refreshUserProfile, // เพิ่มฟังก์ชันรีเฟรชให้ context
                 setProfileImage,
-                setDisplayName,
-                setEmail,
-                setPhone,
-                setCompany,
-                setDepartment,
-                setDescription,
-                setRole,
+                setDisplayName,  // ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้
+                setPhone,         // ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้
+                setCompany,       // ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้
+                setDepartment,    // ตรวจสอบให้แน่ใจว่ามีฟังก์ชันนี้
+                setNickName,      // ตรวจสอบให้แน่ใจว่ามีฟังก์ชันน
+                setEmployeeID,
             }}
         >
             {children}

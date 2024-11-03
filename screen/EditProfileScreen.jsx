@@ -8,105 +8,72 @@ import { firebase } from '@react-native-firebase/firestore';
 import ImagePicker from 'react-native-image-crop-picker';
 import { useTheme } from '../components/ThemeContext';
 import { AuthContext } from "../navigations/AuthProvider";
+import { UserContext } from '../api/UserContext';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import storage from '@react-native-firebase/storage';
+import NetInfo from '@react-native-community/netinfo';
+
+import firestore from '@react-native-firebase/firestore';
+
+const setupFirestorePersistence = async () => {
+    try {
+        await firestore().settings({ cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED });
+        await firestore().enablePersistence();
+        console.log("Offline persistence enabled");
+    } catch (err) {
+        if (err.code === 'failed-precondition') {
+            console.log("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+        } else if (err.code === 'unimplemented') {
+            console.log("The current environment does not support all of the features required to enable persistence");
+        }
+    }
+};
+
 
 const EditProfileScreen = ({ navigation }) => {
-    const { theme, colorScheme } = useTheme(); // Accessing the theme and toggle function
+    const { theme, colorScheme } = useTheme();
     const { user } = useContext(AuthContext);
+    const {
+        profileImage, employeeID, displayName, email, phone, company, department, nickName,
+        setProfileImage, setDisplayName, setPhone, setCompany, setDepartment, setNickName, refreshUserProfile
+    } = useContext(UserContext);
+
+    // Temporary states for form fields
+    const [tempProfileImage, setTempProfileImage] = useState(profileImage);
+    const [tempDisplayName, setTempDisplayName] = useState(displayName);
+    const [tempPhone, setTempPhone] = useState(phone);
+    const [tempCompany, setTempCompany] = useState(company);
+    const [tempDepartment, setTempDepartment] = useState(department);
+    const [tempNickName, setTempNickName] = useState(nickName);
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [loading, setLoading] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
-    const [profileImage, setProfileImage] = useState(user.photoURL);
-    const [selectedImage, setSelectedImage] = useState(null); // เก็บภาพที่เลือกไว้ก่อนที่จะยืนยัน
-    const [displayName, setDisplayName] = useState(user.displayName || 'New User'); // ชื่อเริ่มต้น
+    const [tempEmployeeID, setTempEmployeeID] = useState(employeeID);
+    const [isConnected, setIsConnected] = useState(true);
 
-    // สถานะสำหรับข้อมูลเพิ่มเติม
-    const [email, setEmail] = useState(user.email || null);
-    const [phone, setPhone] = useState(null);
-    const [company, setCompany] = useState(null);
-    const [department, setDepartment] = useState(null);
-    const [description, setDescription] = useState(null);
-    const [loading, setLoading] = useState(false); // สถานะการบันทึก
-
-    const fetchUserProfile = async () => {
-        try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.email);
-            const doc = await userDocRef.get();
-            if (doc.exists) {
-                const userData = doc.data();
-                setProfileImage(userData.profileImage || null);
-                setDisplayName(userData.name || user.displayName);
-                setEmail(userData.email || null);
-                setPhone(userData.phone || null);
-                setCompany(userData.company || null);
-                setDepartment(userData.department || null);
-                setDescription(userData.description || null);
-            }
-        } catch (error) {
-            console.log('Error fetching user profile:', error);
-        }
-    };
 
     useEffect(() => {
-        fetchUserProfile(); // ดึงข้อมูลเมื่อ component ถูกโหลดครั้งแรก
-    }, [user]);
+        setupFirestorePersistence();
 
-    // ฟังก์ชันสำหรับอัปโหลดรูปภาพไปยัง Firebase Storage
-    const uploadImageToFirebase = async (localPath) => {
-        const filename = `${user.email}_profile_${new Date().getTime()}.jpg`;
-        const storageRef = storage().ref(`profileImages/${filename}`);
-        await storageRef.putFile(localPath);
-        const url = await storageRef.getDownloadURL();
-        return url;
-    };
+        const unsubscribeNetInfo = NetInfo.addEventListener(state => {
+            setIsConnected(state.isConnected);
+            if (state.isConnected) {
+                //Alert.alert('Online', 'Your data will sync automatically.');
+            }
+        });
 
-    // ฟังก์ชันสำหรับเลือกจากแกลเลอรี่
-    const selectImageFromLibrary = () => {
-        ImagePicker.openPicker({
-            cropping: true,
-            width: 300,
-            height: 300,
-        })
-            .then(image => {
-                setSelectedImage(image.path); // เก็บพาธรูปในเครื่อง
-                setProfileImage(image.path); // อัปเดต UI
-                setModalVisible(false);
-            })
-            .catch(error => console.log('Error picking image: ', error));
-    };
-
-    // ฟังก์ชันสำหรับถ่ายรูป
-    const takePhotoWithCamera = () => {
-        ImagePicker.openCamera({
-            cropping: true,
-            cropperCircleOverlay: true,
-            width: 300,
-            height: 300,
-        })
-            .then(image => {
-                setSelectedImage(image.path); // เก็บพาธรูปในเครื่อง
-                setProfileImage(image.path); // อัปเดต UI
-                setModalVisible(false);
-            })
-            .catch(error => console.log('Error capturing image: ', error));
-    };
-    // ฟังก์ชันบันทึกข้อมูลไปยัง Firebase เมื่อกดปุ่มบันทึก
-    const [errorFields, setErrorFields] = useState({
-        displayName: false,
-        phone: false,
-        company: false,
-        department: false,
-        description: false,
-    }); // จัดเก็บสถานะของฟิลด์ที่มีข้อผิดพลาด
+        return () => unsubscribeNetInfo();
+    }, []);
 
     const handleSaveProfile = async () => {
         const errors = {
-            displayName: !displayName.trim(),
-            phone: !phone,
-            company: !company,
-            department: !department,
-            description: !description,
+            displayName: !tempDisplayName.trim(),
+            phone: !tempPhone,
+            company: !tempCompany,
+            department: !tempDepartment,
+            nickName: !tempNickName,
+            employeeID: !tempEmployeeID,
         };
-
         setErrorFields(errors);
 
         if (Object.values(errors).some(error => error)) {
@@ -115,80 +82,169 @@ const EditProfileScreen = ({ navigation }) => {
         }
 
         setLoading(true);
+        // ตั้ง timeout 1 นาทีเพื่อตรวจสอบสถานะการโหลด
+        const timeout = setTimeout(() => {
+            if (loading) { // ถ้ายังคงโหลดหลังจากผ่านไป 1 นาที
+                Alert.alert(
+                    'Connection Issue',
+                    'Please check your internet connection.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                setLoading(false); // หยุดการโหลดเมื่อกด OK
+                            }
+                        }
+                    ]
+                );
+            }
+        }, 60000); // 1 นาที = 60000 มิลลิวินาที
+
         try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.email);
-
-            let imageUrl = profileImage;
-
-            // ถ้ามีการเลือกรูปใหม่ จะอัปโหลดไปยัง Firebase Storage
+            const userDocRef = firestore().collection('users').doc(user.email);
+            let imageUrl = tempProfileImage;
             if (selectedImage) {
                 imageUrl = await uploadImageToFirebase(selectedImage);
             }
 
-            // อัปเดตข้อมูลไปยัง Firestore
-            await userDocRef.update({
-                name: displayName,
-                phone: phone,
-                company: company,
-                department: department,
-                description: description,
-                profileImage: imageUrl // เก็บลิงก์ของรูปภาพที่อัปโหลด
-            });
+            const netInfo = await NetInfo.fetch();
+            if (!netInfo.isConnected) {
 
-            if (selectedImage) {
-                await user.updateProfile({
-                    photoURL: imageUrl,
-                });
-                setProfileImage(imageUrl); // อัปเดต UI
+                Alert.alert(
+                    'Offline Mode',
+                    'You are offline. Your changes will be saved and synced when you are online again.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => navigation.navigate('Profile1') // ใส่ชื่อหน้าที่คุณต้องการนำทางไป
+                        }
+                    ]
+                );
+
+                setLoading(false);
             }
 
-            navigation.navigate('Profile1');
+            await userDocRef.set({
+                displayName: tempDisplayName,
+                phone: tempPhone,
+                company: tempCompany,
+                department: tempDepartment,
+                nickName: tempNickName,
+                profileImage: imageUrl,
+                employeeID: tempEmployeeID,
+            }, { merge: true });
 
+            setProfileImage(imageUrl);
+            setDisplayName(tempDisplayName);
+            setPhone(tempPhone);
+            setCompany(tempCompany);
+            setDepartment(tempDepartment);
+            setNickName(tempNickName);
+            setTempEmployeeID(tempEmployeeID);
+            await refreshUserProfile();
+
+            //Alert.alert('Success', 'Profile updated successfully');
+            navigation.navigate('Profile1');
         } catch (error) {
             console.log('Error updating profile:', error);
-            Alert.alert('Failed to update profile. Try again later.');
+            Alert.alert('Error', 'Failed to update profile. Please try again.');
         } finally {
+            clearTimeout(timeout);
             setLoading(false);
         }
     };
-    // ฟังก์ชันลบรูปภาพโปรไฟล์ทั้งใน UI และ Firebase
+    // Error fields state for validation
+    const [errorFields, setErrorFields] = useState({
+        displayName: false,
+        phone: false,
+        company: false,
+        department: false,
+        nickName: false,
+        employeeID: false,
+    });
+
+    useEffect(() => {
+        // Initialize form fields from context values
+        setTempProfileImage(profileImage);
+        setTempDisplayName(displayName);
+        setTempPhone(phone);
+        setTempCompany(company);
+        setTempDepartment(department);
+        setTempNickName(nickName);
+        setTempEmployeeID(employeeID);
+    }, [profileImage, displayName, phone, company, department, nickName, employeeID]);
+
+    // Function to upload image to Firebase Storage
+    const uploadImageToFirebase = async (localPath) => {
+        const filename = `${user.email}_profile_${new Date().getTime()}.jpg`;
+        const storageRef = storage().ref(`profileImages/${filename}`);
+        await storageRef.putFile(localPath);
+        const url = await storageRef.getDownloadURL();
+        return url;
+    };
+
+    // Select image from library
+    const selectImageFromLibrary = () => {
+        ImagePicker.openPicker({
+            cropping: true,
+            width: 300,
+            height: 300,
+        }).then(image => {
+            setSelectedImage(image.path);
+            setTempProfileImage(image.path);
+            setModalVisible(false);
+        }).catch(error => {
+            if (error.message !== 'User cancelled image selection') {
+                console.log('Error picking image:', error);
+            }
+        });
+    };
+
+    // Capture image with camera
+    const takePhotoWithCamera = () => {
+        ImagePicker.openCamera({
+            cropping: true,
+            cropperCircleOverlay: true,
+            width: 300,
+            height: 300,
+        }).then(image => {
+            setSelectedImage(image.path);
+            setTempProfileImage(image.path);
+            setModalVisible(false);
+        }).catch(error => {
+            if (error.message !== 'User cancelled image selection') {
+                console.log('Error capturing image:', error);
+            }
+        });
+    };
+
+    // Remove profile image
     const handleRemoveProfileImage = async () => {
         try {
             const userDocRef = firebase.firestore().collection('users').doc(user.email);
-
-            await userDocRef.update({
-                profileImage: null,
-            });
-
-            await user.updateProfile({
-                photoURL: null,
-            });
-
-            setProfileImage(null);
+            await userDocRef.update({ profileImage: null });
+            await user.updateProfile({ photoURL: null });
+            setTempProfileImage(null);
             setSelectedImage(null);
             Alert.alert('Profile image removed successfully!');
             setModalVisible(false);
         } catch (error) {
-            console.log('Error removing profile image: ', error);
+            console.log('Error removing profile image:', error);
             Alert.alert('Failed to remove profile image. Try again later.');
         }
     };
 
-    // ฟังก์ชันการยืนยันการลบรูปภาพโปรไฟล์
+
+
+
+
     const confirmRemoveImage = () => {
         Alert.alert(
             'Confirm Removal',
             'Are you sure you want to remove your profile picture?',
             [
-                {
-                    text: 'Cancel',
-                    onPress: () => console.log('Cancelled'),
-                    style: 'cancel',
-                },
-                {
-                    text: 'Confirm',
-                    onPress: () => handleRemoveProfileImage(), // ถ้ายืนยันจะลบรูปโปรไฟล์
-                },
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Confirm', onPress: handleRemoveProfileImage },
             ],
             { cancelable: false }
         );
@@ -219,7 +275,6 @@ const EditProfileScreen = ({ navigation }) => {
         inputContainer: {
             marginHorizontal: 20,
             marginTop: 10,
-
         },
         label: {
             color: theme.textColor,
@@ -245,8 +300,8 @@ const EditProfileScreen = ({ navigation }) => {
             fontFamily: 'Poppins-Light',
         },
         submitButtonContainer: {
-            alignItems: 'center'
-            , marginVertical: 20
+            alignItems: 'center',
+            marginVertical: 20
         },
         submitButton: {
             backgroundColor: '#4CAF50',
@@ -301,13 +356,12 @@ const EditProfileScreen = ({ navigation }) => {
 
             <View style={styles.container}>
                 <View style={styles.avatarContainer}>
-                    <Avatar.Image source={{ uri: profileImage || 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg' }} size={wp('30%')} />
+                    <Avatar.Image source={{ uri: selectedImage || profileImage || 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59' }} size={wp('30%')} />
                     <TouchableOpacity onPress={() => setModalVisible(true)} style={[styles.cameraButton, { backgroundColor: theme.backgroundColor }]}>
                         <Icon1 name="camera-outline" size={wp('6%')} color={theme.iconProfile} />
                     </TouchableOpacity>
                 </View>
             </View>
-
 
             {/* All input fields */}
             <View style={styles.inputContainer}>
@@ -316,8 +370,8 @@ const EditProfileScreen = ({ navigation }) => {
                     <Icon name="account-outline" color={theme.iconProfile} size={25} />
                     <TextInput
                         style={styles.textInput}
-                        value={displayName}
-                        onChangeText={setDisplayName}
+                        value={tempDisplayName}
+                        onChangeText={setTempDisplayName}
                         placeholder="Your name"
                         placeholderTextColor={theme.textColor}
                     />
@@ -326,12 +380,12 @@ const EditProfileScreen = ({ navigation }) => {
 
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Nick Name</Text>
-                <View style={styles.inputBox(errorFields.description)}>
+                <View style={styles.inputBox(errorFields.nickName)}>
                     <Icon name="account-outline" color={theme.iconProfile} size={25} />
                     <TextInput
                         style={styles.textInput}
-                        value={description}
-                        onChangeText={setDescription}
+                        value={tempNickName}
+                        onChangeText={setTempNickName}
                         placeholder="Nick Name"
                         placeholderTextColor={theme.textColor}
                     />
@@ -345,7 +399,6 @@ const EditProfileScreen = ({ navigation }) => {
                     <TextInput
                         style={styles.textInput}
                         value={email}
-                        onChangeText={setEmail}
                         placeholder="Email"
                         placeholderTextColor={theme.textColor}
                         editable={false}
@@ -359,8 +412,8 @@ const EditProfileScreen = ({ navigation }) => {
                     <Icon name="phone-outline" color={theme.iconProfile} size={25} />
                     <TextInput
                         style={styles.textInput}
-                        value={phone}
-                        onChangeText={setPhone}
+                        value={tempPhone}
+                        onChangeText={setTempPhone}
                         placeholder="Phone"
                         placeholderTextColor={theme.textColor}
                     />
@@ -373,8 +426,8 @@ const EditProfileScreen = ({ navigation }) => {
                     <Icon name="office-building-outline" color={theme.iconProfile} size={25} />
                     <TextInput
                         style={styles.textInput}
-                        value={company}
-                        onChangeText={setCompany}
+                        value={tempCompany}
+                        onChangeText={setTempCompany}
                         placeholder="Company"
                         placeholderTextColor={theme.textColor}
                     />
@@ -387,9 +440,23 @@ const EditProfileScreen = ({ navigation }) => {
                     <Icon name="account-group-outline" color={theme.iconProfile} size={25} />
                     <TextInput
                         style={styles.textInput}
-                        value={department}
-                        onChangeText={setDepartment}
+                        value={tempDepartment}
+                        onChangeText={setTempDepartment}
                         placeholder="Department"
+                        placeholderTextColor={theme.textColor}
+                    />
+                </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Employee ID</Text>
+                <View style={styles.inputBox(errorFields.employeeID)}>
+                    <Icon name="account-group-outline" color={theme.iconProfile} size={25} />
+                    <TextInput
+                        style={styles.textInput}
+                        value={tempEmployeeID}
+                        onChangeText={setTempEmployeeID}
+                        placeholder="EmployeeID"
                         placeholderTextColor={theme.textColor}
                     />
                 </View>

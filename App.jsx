@@ -1,13 +1,35 @@
-import React, { useEffect } from 'react';
-import { Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Platform, View, Text, StyleSheet } from 'react-native';
 import Providers from './navigations';
 import messaging from '@react-native-firebase/messaging';
 import PushNotification from 'react-native-push-notification';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import NetInfo from '@react-native-community/netinfo';
+
+firestore()
+  .settings({
+    cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED,
+  })
+  .then(() => {
+    return firestore().enablePersistence();
+  })
+  .then(() => {
+    console.log("Offline persistence enabled");
+  })
+  .catch((err) => {
+    if (err.code === 'failed-precondition') {
+      console.log("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+    } else if (err.code === 'unimplemented') {
+      console.log("The current environment does not support all of the features required to enable persistence");
+    }
+  });
 
 const App = () => {
-  // ฟังก์ชันขออนุญาตแจ้งเตือนจากผู้ใช้
+  const [isConnected, setIsConnected] = useState(null); // เริ่มต้นเป็น null เพื่อระบุสถานะเริ่มต้น
+  const [showBanner, setShowBanner] = useState(false);
+  const [shouldHideBanner, setShouldHideBanner] = useState(false); // ตัวแปรควบคุมการซ่อนแถบ
+
   const requestUserPermission = async () => {
     const authStatus = await messaging().requestPermission();
     const enabled =
@@ -15,16 +37,16 @@ const App = () => {
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
     if (enabled) {
-      //console.log('Permission granted:', authStatus);
+      Alert.alert("Permission granted", "Thank you for enabling notifications!");
+    } else {
+      Alert.alert("Permission needed", "Please enable notifications to stay updated with alerts.");
     }
   };
 
-  // ฟังก์ชันดึง Token และบันทึกลง Firestore
   const getToken = async (user) => {
     try {
       const fcmToken = await messaging().getToken();
       if (fcmToken) {
-        //console.log('FCM Token:', fcmToken);
         updateUserToken(user.email, fcmToken);
       }
     } catch (error) {
@@ -32,7 +54,6 @@ const App = () => {
     }
   };
 
-  // ฟังก์ชันบันทึก Token ไปยัง Firestore
   const updateUserToken = async (email, token) => {
     try {
       await firestore().collection("users").doc(email).set(
@@ -41,13 +62,11 @@ const App = () => {
         },
         { merge: true }
       );
-      //console.log("Token saved to Firestore for user:", email);
     } catch (error) {
       console.error("Error saving token to Firestore:", error);
     }
   };
 
-  // สร้าง Notification Channel สำหรับ Android
   const createNotificationChannel = () => {
     PushNotification.createChannel(
       {
@@ -57,14 +76,12 @@ const App = () => {
         importance: 4,
         vibrate: true,
       },
-      (created) => console.log(`createChannel returned '${created}'`)
+      //(created) => console.log(`createChannel returned '${created}'`)
     );
   };
 
-  // ตั้งค่าเพื่อรับการแจ้งเตือนเมื่อแอปอยู่ใน foreground
   const foregroundNotificationListener = () => {
     messaging().onMessage(async (remoteMessage) => {
-      //console.log('A new FCM message arrived!', JSON.stringify(remoteMessage));
       PushNotification.localNotification({
         channelId: '1',
         title: remoteMessage.notification?.title || 'Notification',
@@ -74,33 +91,103 @@ const App = () => {
   };
 
   useEffect(() => {
-    requestUserPermission();
+    const setupFirestorePersistence = async () => {
+      try {
+        await firestore().settings({ cacheSizeBytes: firestore.CACHE_SIZE_UNLIMITED });
+        await firestore().enablePersistence();
+        console.log("Offline persistence enabled");
+      } catch (err) {
+        if (err.code === 'failed-precondition') {
+          console.log("Multiple tabs open, persistence can only be enabled in one tab at a time.");
+        } else if (err.code === 'unimplemented') {
+          console.log("The current environment does not support all of the features required to enable persistence");
+        }
+      }
+    };
 
-    // สร้าง Notification Channel (Android)
+    setupFirestorePersistence();
+
+    const checkAndRequestPermission = async () => {
+      const authStatus = await messaging().hasPermission();
+      if (authStatus === messaging.AuthorizationStatus.NOT_DETERMINED) {
+        await requestUserPermission();
+      }
+    };
+
+    checkAndRequestPermission();
+
     if (Platform.OS === 'android') {
       createNotificationChannel();
     }
 
-    // Listener สำหรับ foreground notifications
     foregroundNotificationListener();
 
-    // ตั้งค่า Background Notification Handling
     messaging().setBackgroundMessageHandler(async (remoteMessage) => {
       console.log('Message handled in the background!', remoteMessage);
     });
 
-    // Listener ตรวจจับการเปลี่ยนแปลงสถานะการล็อกอิน
     const unsubscribeAuth = auth().onAuthStateChanged((user) => {
       if (user) {
-        //console.log('User logged in:', user.email);
-        getToken(user); // ดึงและบันทึก token เมื่อผู้ใช้ล็อกอินสำเร็จ
+        getToken(user);
       }
     });
 
-    return () => unsubscribeAuth(); // ยกเลิก listener เมื่อ component ถูก unmount
-  }, []);
+    const unsubscribeNetInfo = NetInfo.addEventListener(state => {
+      if (isConnected === null) {
+        // กำหนดสถานะครั้งแรกโดยไม่แสดงแถบแจ้งเตือน
+        setIsConnected(state.isConnected);
+      } else if (state.isConnected !== isConnected) {
+        // เมื่อสถานะการเชื่อมต่อเปลี่ยนไป ให้แสดงแถบแจ้งเตือน
+        setIsConnected(state.isConnected);
+        setShowBanner(true);
+        setShouldHideBanner(false); // รีเซ็ตสถานะการซ่อนแถบ
 
-  return <Providers />;
+        if (state.isConnected) {
+          // ถ้าเชื่อมต่อกลับมาเป็นปกติ ให้ตั้งเวลาเพื่อซ่อนแถบหลัง 5 วินาที
+          setShouldHideBanner(true);
+          setTimeout(() => {
+            setShowBanner(false);
+          }, 4000);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeNetInfo();
+    };
+  }, [isConnected]);
+
+  return (
+    <View style={{ flex: 1 }}>
+      {showBanner && (
+        <View style={[styles.banner, isConnected ? styles.bannerOnline : styles.bannerOffline]}>
+          <Text style={styles.bannerText}>
+            {isConnected ? 'Connected to the Internet' : 'No Internet Connection'}
+          </Text>
+        </View>
+      )}
+      <Providers />
+    </View>
+  );
 };
+
+const styles = StyleSheet.create({
+  banner: {
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bannerOffline: {
+    backgroundColor: 'red',
+  },
+  bannerOnline: {
+    backgroundColor: 'green',
+  },
+  bannerText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});
 
 export default App;

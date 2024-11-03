@@ -10,7 +10,7 @@ import storage from '@react-native-firebase/storage';
 
 const CreateTicketScreen = ({ navigation }) => {
   const { user } = useContext(AuthContext);
-  const { profileImage, displayName, email, phone, company, department, role, description } = useContext(UserContext);
+  const { profileImage, displayName, email, phone, company, department, role, nickName, employeeID } = useContext(UserContext);
   const { theme, colorScheme, toggleColorScheme } = useTheme();
   const [errorFields, setErrorFields] = useState({ title: false, descriptions: false, category: false });
   const [selectedImage, setSelectedImage] = useState(null);
@@ -26,9 +26,6 @@ const CreateTicketScreen = ({ navigation }) => {
   const [dueDate, setDueDate] = useState('');
   const [estimatedTime, setEstimatedTime] = useState('');
   const [tags, settags] = useState('');
-  const [followUpDetails, setFollowUpDetails] = useState('');
-  const [lastUpdated, setLastUpdated] = useState('');
-  const [resolutionNotes, setResolutionNotes] = useState('');
 
 
   // ฟังก์ชันสำหรับอัปโหลดรูปภาพไปยัง Firebase Storage
@@ -59,6 +56,22 @@ const CreateTicketScreen = ({ navigation }) => {
     }
 
     setLoading(true); // เริ่มการแสดงการหมุน
+    const timeout = setTimeout(() => {
+      if (loading) { // ถ้ายังคงโหลดหลังจากผ่านไป 1 นาที
+        Alert.alert(
+          'Connection Issue',
+          'Please check your internet connection.',
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setLoading(false); // หยุดการโหลดเมื่อกด OK
+              }
+            }
+          ]
+        );
+      }
+    }, 60000); // 1 นาที = 60000 มิลลิวินาที
 
     try {
       const now = new Date();
@@ -91,30 +104,32 @@ const CreateTicketScreen = ({ navigation }) => {
 
       // บันทึกข้อมูลของ ticket ใน Firestore โดยใช้ ticketId เป็น Document ID
       await ticketRef.doc(ticketId).set({
-        displayName,
-        phone,
-        company,
-        department,
-        role,
-        description,
-        ticketCount,
-        profileImage,
+        displayName: displayName || '', // ชื่อเต็ม
+        phone: phone || '',
+        company: company || '',
+        department: department || '',
+        employeeID: employeeID || '',
+        role: role || '',
+        nickName: nickName || '',
+        ticketCount,  // เลขที่งานรันเรื่อยๆ
+        profileImage: profileImage || '', // รูปโปรไฟล์
 
-        title,
-        descriptions,
-        priority,
-        category,
-        location,
+        title, //ชื่องาน
+        descriptions, //รายละเอียด
+        priority, // ระดับความสำคัญ
+        category, // ประเภท
+        location, // สถานที่ผู้แจ้ง
         userEmail: user.email,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: 'open', // เริ่มต้นด้วยสถานะ "open"
+        status: 'Pending', // เริ่มต้นสถานะ 
         dueDate: dueDate || null, // วันที่กำหนดเสร็จ
         estimatedTime: estimatedTime || null, // เวลาโดยประมาณในการแก้ไขปัญหา
-        attachments: imageUrl, // เอกสารหรือรูปภาพที่แนบมา
+        attachments: imageUrl || null, // เอกสารหรือรูปภาพที่แนบมา
+        progress: 0,
         tags: tags || [], // แท็กหรือป้ายกำกับ
-        followUpDetails: followUpDetails || '', // รายละเอียดการติดตาม รับงานโดย
-        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(), // วันที่อัปเดตล่าสุด
-        resolutionNotes: '', // บันทึกการแก้ปัญหาหลังจากเสร็จสิ้น
+        jobOwner: null, // รายละเอียดการติดตาม รับงานโดย
+        lastUpdatedJobOwner: null, // วันที่ตอนรับงาน
+        resolutionNotes: null, // บันทึกการแก้ปัญหาหลังจากเสร็จสิ้น
       });
 
       Alert.alert('Success', 'Your ticket has been created successfully!');
@@ -123,6 +138,7 @@ const CreateTicketScreen = ({ navigation }) => {
       console.log('Error creating ticket:', error);
       Alert.alert('Error', 'Failed to create ticket. Please try again later.');
     } finally {
+      clearTimeout(timeout);
       setLoading(false); // ปิดการแสดงการหมุนเมื่อบันทึกเสร็จ
     }
   };
@@ -201,7 +217,7 @@ const CreateTicketScreen = ({ navigation }) => {
               className="absolute left-3 -top-3  px-1 text-blue-500 z-10 font-Light font-bold text-[18px]"
               style={{ zIndex: 10, backgroundColor: theme.backgroundColor, color: theme.textColor }}
             >
-              Subject
+              Subject <Text className='text-red-500'>*</Text>
             </Text>
 
             {/* กรอบ input */}
@@ -228,7 +244,7 @@ const CreateTicketScreen = ({ navigation }) => {
               className="absolute left-3 -top-3  px-1 text-blue-500 z-10  font-Light font-bold text-[18px]"
               style={{ zIndex: 10, backgroundColor: theme.backgroundColor, color: theme.textColor }}
             >
-              Description
+              Description <Text className='text-red-500'>*</Text>
             </Text>
             <TextInput
               className={'border rounded-lg p-4 text-lg h-28'}
@@ -299,7 +315,7 @@ const CreateTicketScreen = ({ navigation }) => {
         {/* Category */}
         <View className="mb-5">
           <Text className="font-semibold text-[18px] mb-3" style={{ color: theme.textColor }}>
-            Select Category
+            Select Category <Text className='text-red-500'>*</Text>
           </Text>
           <View className="flex-row justify-between space-x-2">
             <TouchableOpacity

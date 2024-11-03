@@ -10,26 +10,23 @@ const HomeLoginScreen = ({ navigation }) => {
                 backgroundColor="#e5eff8"
             />
 
-            {/* Logo Image */}
-            <Image 
-                source={require("../assets/images/logo.png")} 
-                style={styles.logo} 
-            />
+
+            <Text style={styles.jarudat}>Jarudat</Text>
 
             {/* Illustration Image */}
-            <Image 
-                source={require("../assets/images/man.png")} 
-                style={styles.illustration} 
+            <Image
+                source={require("../assets/images/man.png")}
+                style={styles.illustration}
             />
 
             {/* Main Heading */}
             <Text style={styles.mainHeading}>
-                Lorem ipsum doler.
+                Support at Your Fingertips
             </Text>
 
             {/* Subtext */}
             <Text style={styles.subtext}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+            Comprehensive IT helpdesk service for all your hardware and software issues. Contact us anytime.
             </Text>
 
             {/* Button Container */}
@@ -41,7 +38,7 @@ const HomeLoginScreen = ({ navigation }) => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                    onPress={() => navigation.navigate('Signup')} 
+                    onPress={() => navigation.navigate('Signup')}
                     style={styles.signupButton}>
                     <Text style={styles.signupText}>Sign-up</Text>
                 </TouchableOpacity>
@@ -56,15 +53,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'space-between', 
+        justifyContent: 'space-between',
         backgroundColor: '#e5eff8',
         padding: wp('4%'),
-        paddingBottom: hp('5%'), 
+        paddingBottom: hp('5%'),
     },
-    logo: {
-        height: hp('5%'),
-        width: wp('36%'),
-        marginVertical: hp('2%')
+    jarudat: {
+        marginVertical: hp('2%'),
+        fontSize: wp('8%'),
+        fontFamily: 'Poppins-Bold'
     },
     illustration: {
         height: hp('30%'),

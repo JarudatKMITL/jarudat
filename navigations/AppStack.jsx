@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screen/HomeScreen';
-import CustomDrawer from '../components/CustomDrawer';
 import HomeCreacteTicket from '../screen/HomeCreacteTicket';
 import HomeKnowleadScreen from '../screen/HomeKnowleadScreen';
 import HomeProfileScreen from '../screen/HomeProfileScreen';
@@ -16,13 +16,15 @@ import { UserContext } from '../api/UserContext';
 import AdminTicketScreen from '../screen/AdminTicketScreen';
 import UserTicketScreen from '../screen/UserTicketScreen';
 import TicketOpen from '../ticketAllScreen/TicketOpenAdmin';
+import InProgressScreen from '../ticketAllScreen/InProgress';
+import { DrawerHomeApp } from '../components/DrawerHome';
 
-
-
-// สร้าง Stack Navigators เดิมแต่ละอันเพื่อคงฟังก์ชันการทำงานทั้งหมด
+// สร้าง Stack Navigators
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
+const Tab = createBottomTabNavigator();
 
+// Stack Navigator for Home
 const HomeStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
@@ -31,7 +33,7 @@ const HomeStack = ({ navigation }) => (
         }}
     >
         <Stack.Screen
-            name="Home1"
+            name="Homestack"
             component={HomeScreen}
             options={{
                 headerTitle: 'Home',
@@ -48,13 +50,13 @@ const HomeStack = ({ navigation }) => (
                 ),
             }}
         />
-
     </Stack.Navigator>
 );
 
+// Stack Navigator for Tickets
 const TicketStack = ({ navigation }) => {
     const { theme } = useTheme();
-    const { role, loading } = useContext(UserContext); // ดึงข้อมูล role และ loading จาก context
+    const { role, loading } = useContext(UserContext);
 
     if (loading) {
         return (
@@ -71,11 +73,11 @@ const TicketStack = ({ navigation }) => {
             }}
         >
             {role === 'admin' ? (
-                // ถ้า role เป็น admin, แสดงหน้า AdminTicketScreen
                 <Stack.Screen
                     name="AdminTicket"
                     component={AdminTicketScreen}
                     options={{
+                        headerShown: false,
                         headerTitle: 'Ticket',
                         headerTitleAlign: 'center',
                         headerTitleStyle: {
@@ -97,7 +99,6 @@ const TicketStack = ({ navigation }) => {
                     }}
                 />
             ) : (
-                // ถ้า role เป็น user, แสดงหน้า UserTicketScreen
                 <Stack.Screen
                     name="UserTickets"
                     component={UserTicketScreen}
@@ -123,7 +124,6 @@ const TicketStack = ({ navigation }) => {
                     }}
                 />
             )}
-
             <Stack.Screen
                 name="CreateTicket1"
                 component={HomeCreacteTicket}
@@ -149,10 +149,10 @@ const TicketStack = ({ navigation }) => {
                 }}
             />
             <Stack.Screen
-                name="TicketsOpen"
+                name="TakeOwnership"
                 component={TicketOpen}
                 options={{
-                    headerTitle: 'My tickets open',
+                    headerTitle: 'Take Ownership',
                     headerTitleAlign: 'center',
                     headerTitleStyle: {
                         color: theme.textColor,
@@ -170,14 +170,37 @@ const TicketStack = ({ navigation }) => {
                             />
                         </View>
                     ),
-
                 }}
             />
-
+            <Stack.Screen
+                name="InProgress"
+                component={InProgressScreen}
+                options={{
+                    headerTitle: 'InProgress',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
+                            />
+                        </View>
+                    ),
+                }}
+            />
         </Stack.Navigator>
-    )
+    );
 };
 
+// Stack Navigator for Knowledge
 const KnowledgeStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
@@ -206,6 +229,7 @@ const KnowledgeStack = ({ navigation }) => (
     </Stack.Navigator>
 );
 
+// Stack Navigator for Profile
 const ProfileStack = ({ navigation }) => {
     const { theme } = useTheme();
     return (
@@ -218,6 +242,7 @@ const ProfileStack = ({ navigation }) => {
                 name="Profile1"
                 component={HomeProfileScreen}
                 options={{
+                    //headerShown: false,
                     headerTitle: 'Your Profile',
                     headerTitleAlign: 'center',
                     headerTitleStyle: {
@@ -249,7 +274,6 @@ const ProfileStack = ({ navigation }) => {
                     ),
                 }}
             />
-
             <Stack.Screen
                 name="EditProfile"
                 component={EditProfileScreen}
@@ -272,19 +296,19 @@ const ProfileStack = ({ navigation }) => {
                             />
                         </View>
                     ),
-
                 }}
             />
         </Stack.Navigator>
     );
 };
 
-// สร้าง Drawer Navigator รวม Stack ทั้งหมด
-const AppDrawer = () => (
+// Bottom Tab Navigator
+
+const HomeDrawer = ({ navigation }) => (
     <Drawer.Navigator
-        drawerContent={props => <CustomDrawer {...props} />}
+        drawerContent={props => <DrawerHomeApp{...props} />}
         screenOptions={{
-            headerShown: false,
+            headerShown: false,  // ซ่อน Header ของทุกหน้าจอที่อยู่ใน Drawer
             drawerActiveBackgroundColor: '#06141B',
             drawerActiveTintColor: 'yellow',
             drawerInactiveTintColor: '#333',
@@ -295,89 +319,39 @@ const AppDrawer = () => (
             },
         }}
     >
-        <Drawer.Screen
-            name="HomeStack"
-            component={HomeStack}
-            options={{
-                drawerLabel: "Home",
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="home-outline" size={22} color={color} />
-                ),
-                // ใช้ listener เพื่อรีเซ็ตสแต็กไปที่หน้าหลักของ HomeStack
-                listeners: ({ navigation }) => ({
-                    drawerItemPress: () => {
-                        navigation.dispatch(
-                            CommonActions.reset({
-                                index: 0,
-                                routes: [{ name: 'HomeStack' }],
-                            })
-                        );
-                    },
-                }),
-            }}
-        />
-        <Drawer.Screen
-            name="TicketStack"
-            component={TicketStack}
-            options={{
-                drawerLabel: "Tickets",
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="newspaper-outline" size={22} color={color} />
-                ),
-                // ใช้ listener เพื่อรีเซ็ตสแต็กไปที่หน้าหลักของ TicketStack
-                listeners: ({ navigation }) => ({
-                    drawerItemPress: () => {
-                        navigation.dispatch(
-                            CommonActions.reset({
-                                index: 0,
-                                routes: [{ name: 'TicketStack' }],
-                            })
-                        );
-                    },
-                }),
-            }}
-        />
-        <Drawer.Screen
-            name="KnowledgeStack"
-            component={KnowledgeStack}
-            options={{
-                drawerLabel: "Knowledge",
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="school-outline" size={22} color={color} />
-                ),
-                listeners: ({ navigation }) => ({
-                    drawerItemPress: () => {
-                        navigation.dispatch(
-                            CommonActions.reset({
-                                index: 0,
-                                routes: [{ name: 'KnowledgeStack' }],
-                            })
-                        );
-                    },
-                }),
-            }}
-        />
-        <Drawer.Screen
-            name="ProfileStack"
-            component={ProfileStack}
-            options={{
-                drawerLabel: "Profile",
-                drawerIcon: ({ color }) => (
-                    <Ionicons name="person-outline" size={22} color={color} />
-                ),
-                listeners: ({ navigation }) => ({
-                    drawerItemPress: () => {
-                        navigation.dispatch(
-                            CommonActions.reset({
-                                index: 0,
-                                routes: [{ name: 'ProfileStack' }],
-                            })
-                        );
-                    },
-                }),
-            }}
-        />
+        <Drawer.Screen name="Homedrawer" component={HomeStack} />
     </Drawer.Navigator>
+
 );
 
-export default AppDrawer;
+// ใช้ Bottom Tab เป็นโครงสร้างหลักใน Drawer Navigator
+const AppBottomTabs = () => (
+    <Tab.Navigator
+        screenOptions={({ route }) => ({
+            tabBarIcon: ({ color, size }) => {
+                let iconName;
+                if (route.name === 'Home') {
+                    iconName = 'home-outline';
+                } else if (route.name === 'Tickets') {
+                    iconName = 'newspaper-outline';
+                } else if (route.name === 'Knowledge') {
+                    iconName = 'school-outline';
+                } else if (route.name === 'Profile') {
+                    iconName = 'person-outline';
+                }
+                return <Ionicons name={iconName} size={size} color={color} />;
+            },
+            tabBarActiveTintColor: 'yellow',
+            tabBarInactiveTintColor: '#333',
+        })}
+    >
+        <Tab.Screen name="Home" component={HomeDrawer} options={{ headerShown: false }} />
+        <Tab.Screen name="Tickets" component={TicketStack} options={{ headerShown: false }} />
+        <Tab.Screen name="Knowledge" component={KnowledgeStack} options={{ headerShown: false }} />
+        <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
+    </Tab.Navigator>
+);
+
+export default AppBottomTabs
+
+
