@@ -10,7 +10,6 @@ const lightTheme = {
   borderColor: '#333333',
   bghTicket: '#003c82',
   serviceT: '#FFF',
-  //ส่วนรับงาน
   background: '#f0f0f0',
   text: '#333',
   button: '#007bff',
@@ -19,18 +18,22 @@ const lightTheme = {
   cardBackground: '#ffffff',
   headerBackground: '#ffffff',
   shadowColor: '#000',
-
+  gradientStart: '#4c669f', // สีเริ่มต้นของ gradient
+  gradientEnd: '#3b5998',   // สีสุดท้ายของ gradient
+  backgroundColor: '#FAFAFA',
+  tabBarBackgroundColor: '#FFFFFF',
+  tabBarActiveTintColor: '#FF9800', // สีส้มสำหรับไอคอนที่เลือก
+  tabBarInactiveTintColor: '#888',  // สีเทาสำหรับไอคอนที่ไม่เลือก
 };
 
 const darkTheme = {
-  backgroundColor: '#222222',  // สีพื้นหลัง
-  textColor: '#EEEEEE',        // สีข้อความ
-  accentColor: '#424242',     // สีตัด
+  backgroundColor: '#222222',
+  textColor: '#EEEEEE',
+  accentColor: '#424242',
   iconProfile: '#FFF',
   borderColor: '#ECEFF1',
   bghTicket: '#424242',
   serviceT: '#9E9E9E',
-  //ส่วนรับงาน
   background: '#121212',
   text: '#f0f0f0',
   button: '#1a73e8',
@@ -39,7 +42,12 @@ const darkTheme = {
   cardBackground: '#1e1e1e',
   headerBackground: '#333333',
   shadowColor: '#000',
-
+  gradientStart: '#232526', // สีเริ่มต้นของ gradient
+  gradientEnd: '#414345',   // สีสุดท้ายของ gradient
+  backgroundColor: '#121212',
+  tabBarBackgroundColor: '#222222',
+  tabBarActiveTintColor: '#FFD700', // สีเหลืองสดใสสำหรับไอคอนที่เลือก
+  tabBarInactiveTintColor: '#555',  // สีเทาเข้มสำหรับไอคอนที่ไม่เลือก
 };
 
 // Create a context for theme

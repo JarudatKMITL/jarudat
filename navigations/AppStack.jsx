@@ -2,6 +2,8 @@ import React, { useContext } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import LinearGradient from 'react-native-linear-gradient';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -325,32 +327,65 @@ const HomeDrawer = ({ navigation }) => (
 );
 
 // ใช้ Bottom Tab เป็นโครงสร้างหลักใน Drawer Navigator
-const AppBottomTabs = () => (
-    <Tab.Navigator
+const AppBottomTabs = () => {
+    const { theme } = useTheme();
+  
+    return (
+      <Tab.Navigator
         screenOptions={({ route }) => ({
-            tabBarIcon: ({ color, size }) => {
-                let iconName;
-                if (route.name === 'Home') {
-                    iconName = 'home-outline';
-                } else if (route.name === 'Tickets') {
-                    iconName = 'newspaper-outline';
-                } else if (route.name === 'Knowledge') {
-                    iconName = 'school-outline';
-                } else if (route.name === 'Profile') {
-                    iconName = 'person-outline';
-                }
-                return <Ionicons name={iconName} size={size} color={color} />;
-            },
-            tabBarActiveTintColor: 'yellow',
-            tabBarInactiveTintColor: '#333',
+          tabBarIcon: ({ focused, color, size }) => {
+            let iconName;
+  
+            if (route.name === 'Home') {
+              iconName = 'home-outline';
+            } else if (route.name === 'Tickets') {
+              iconName = 'newspaper-outline';
+            } else if (route.name === 'Knowledge') {
+              iconName = 'school-outline';
+            } else if (route.name === 'Profile') {
+              iconName = 'person-outline';
+            }
+  
+            // เพิ่มแอนิเมชันการขยายของไอคอน
+            const animatedStyle = useAnimatedStyle(() => {
+              return {
+                transform: [{ scale: withTiming(focused ? 1.2 : 1, { duration: 200 }) }],
+              };
+            });
+  
+            return (
+              <Animated.View style={animatedStyle}>
+                <Ionicons name={iconName} size={size} color={color} />
+              </Animated.View>
+            );
+          },
+          tabBarBackground: () => (
+            <LinearGradient
+              colors={[theme.tabBarBackgroundColor, theme.backgroundColor]}
+              style={{ flex: 1 }}
+            />
+          ),
+          tabBarActiveTintColor: theme.tabBarActiveTintColor,
+          tabBarInactiveTintColor: theme.tabBarInactiveTintColor,
+          tabBarShowLabel: false, // ซ่อนชื่อของแท็บเพื่อให้ดูสะอาดขึ้น
+          tabBarStyle: {
+            backgroundColor: theme.tabBarBackgroundColor, // พื้นหลังของแท็บ
+            borderTopWidth: 0, // ซ่อนขอบบนของแท็บ
+            paddingBottom: 5,
+            paddingTop: 5,
+            height: 60, // เพิ่มความสูงของแท็บเพื่อให้ดูเด่น
+          },
         })}
-    >
+      >
         <Tab.Screen name="Home" component={HomeDrawer} options={{ headerShown: false }} />
         <Tab.Screen name="Tickets" component={TicketStack} options={{ headerShown: false }} />
         <Tab.Screen name="Knowledge" component={KnowledgeStack} options={{ headerShown: false }} />
         <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
-    </Tab.Navigator>
-);
+      </Tab.Navigator>
+    );
+  };
+  
+
 
 export default AppBottomTabs
 
