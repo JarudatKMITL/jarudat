@@ -47,8 +47,8 @@ export const AuthProvider = ({ children, navigation }) => {
                         // สร้าง credential สำหรับ Firebase จาก Google idToken
                         const credential = auth.GoogleAuthProvider.credential(idToken);
                         const userCredential = await auth().signInWithCredential(credential); // ลงชื่อเข้าใช้ Firebase
-                        const { email, uid ,displayName,photoURL } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
-                       
+                        const { email, uid, displayName, photoURL } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
+
 
 
                         // ตรวจสอบอีเมลและกำหนดบทบาท (role)
@@ -67,17 +67,36 @@ export const AuthProvider = ({ children, navigation }) => {
 
                         //console.log(`User signed in as ${role}`); // แสดง log บทบาทที่ตรวจสอบได้
 
-                        // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
+
+
+                        // ตรวจสอบว่ามีข้อมูลผู้ใช้ใน Firestore คอลเลคชัน "users" หรือไม่
                         const userDocRef = firebase.firestore().collection('users').doc(email);
-                        await userDocRef.set({
-                            email: email,
-                            role: role,  // บทบาทจากการตรวจสอบ
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            displayName: displayName, // ชื่อจาก Facebook
-                            profileImage: photoURL, // รูปโปรไฟล์จาก Facebook 
+                        const userDoc = await userDocRef.get();
 
-                        });
+                        // บันทึกข้อมูลครั้งแรกโดยตรวจสอบว่ารูปภาพไม่เป็น null
+                        if (!userDoc.exists) {
+                            await userDocRef.set({
+                                email: email,
+                                role: role,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                displayName: displayName || "No Name", // ตั้งค่าเริ่มต้นหาก displayName เป็น null
+                                profileImage: photoURL || "default_image_url", // ตั้งค่าเริ่มต้นหาก photoURL เป็น null
+                                role_status: "pending",
+                            });
+                        } else {
+                            // ถ้ามีเอกสารอยู่แล้ว อัปเดตเฉพาะฟิลด์ที่ไม่มีอยู่
+                            const updateData = {};
+                            if (!userDoc.data().displayName && displayName) {
+                                updateData.displayName = displayName;
+                            }
+                            if (!userDoc.data().profileImage && photoURL) {
+                                updateData.profileImage = photoURL;
+                            }
+                            updateData.email = email;
+                            updateData.role = role;
 
+                            await userDocRef.set(updateData, { merge: true });
+                        }
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
                         const savedUserDoc = await userDocRef.get();
                         //console.log('Saved role in Firestore:', savedUserDoc.data().role);
@@ -96,8 +115,8 @@ export const AuthProvider = ({ children, navigation }) => {
                     try {
                         // ล้างข้อมูลการเข้าสู่ระบบ
                         await LoginManager.logOut();
-                        // Attempt login with permissions
 
+                        // Attempt login with permissions
                         const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
 
                         if (result.isCancelled) {
@@ -107,11 +126,8 @@ export const AuthProvider = ({ children, navigation }) => {
                         // Once signed in, get the users AccessToken
                         const data = await AccessToken.getCurrentAccessToken();
 
-                        if (!data) {
+                        if (!data || !data.accessToken) {
                             throw 'Something went wrong obtaining access token';
-                        }
-                        if (!data.accessToken) {
-                            throw 'Access token is null';
                         }
 
                         console.log('Access Token:', data.accessToken); // ตรวจสอบค่าที่ได้
@@ -124,8 +140,9 @@ export const AuthProvider = ({ children, navigation }) => {
 
                         const { email, uid } = userCredential.user; // ดึงข้อมูล email และ uid ของผู้ใช้
                         const facebookProfile = userCredential.additionalUserInfo.profile;
+
                         // ตรวจสอบบทบาทจาก Firestore คอลเลคชั่น "roles"
-                        const roleDocRef = firebase.firestore().collection('roles').doc(email); // ใช้อีเมลเป็นไอดีในคอลเลคชัน
+                        const roleDocRef = firebase.firestore().collection('roles').doc(email);
                         const roleDoc = await roleDocRef.get();
 
                         let role = 'user'; // บทบาทเริ่มต้นเป็น 'user'
@@ -145,14 +162,26 @@ export const AuthProvider = ({ children, navigation }) => {
                         // บันทึกบทบาทของผู้ใช้ใน Firestore คอลเลคชัน "users"
                         const userDocRef = firebase.firestore().collection('users').doc(email);
 
-                        await userDocRef.set({
-                            email: email,
-                            role: role,  // บทบาทจากการตรวจสอบ
-                            displayName: displayName, // ชื่อจาก Facebook
-                            profileImage: profileImage, // รูปโปรไฟล์จาก Facebook
-                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        // ดึงข้อมูลเอกสารผู้ใช้จาก Firestore ก่อนตรวจสอบว่ามีเอกสารอยู่หรือไม่
+                        const userDoc = await userDocRef.get();
 
-                        });
+                        // ถ้ายังไม่มีข้อมูลเอกสารของผู้ใช้มาก่อน จะเพิ่มข้อมูลใหม่
+                        if (!userDoc.exists) {
+                            await userDocRef.set({
+                                email: email,
+                                role: role,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                displayName: displayName,
+                                profileImage: profileImage,
+                                role_status: "pending",
+                            });
+                        } else {
+                            // ถ้ามีเอกสารอยู่แล้ว เพิ่มเฉพาะฟิลด์ที่มีอยู่เท่านั้น
+                            await userDocRef.set({
+                                email: email,
+                                role: role,
+                            }, { merge: true });
+                        }
 
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
                         const savedUserDoc = await userDocRef.get();
@@ -164,6 +193,7 @@ export const AuthProvider = ({ children, navigation }) => {
                         console.log('Error during Facebook login:', e);
                     }
                 },
+
 
                 register: async (email, password) => {
                     // ตรวจสอบค่าว่างและรูปแบบของอีเมลก่อนสมัครสมาชิก
@@ -209,6 +239,7 @@ export const AuthProvider = ({ children, navigation }) => {
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                             profileImage: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59',
                             displayName: 'Untitled',
+                            role_status: "pending",
                         });
 
 

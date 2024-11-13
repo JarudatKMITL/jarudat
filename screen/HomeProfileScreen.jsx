@@ -8,7 +8,8 @@ import { AuthContext } from "../navigations/AuthProvider";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { UserContext } from '../api/UserContext';
 
-const HomeProfileScreen = () => {
+const HomeProfileScreen = (route) => {
+  console.log('AdminTicketScreen mounted', route.params); // ตรวจสอบเมื่อหน้านี้ถูกโหลด
   const { theme, toggleColorScheme, colorScheme } = useTheme(); // Accessing the theme and toggle function
   const { user, logout } = useContext(AuthContext);
   const { role, employeeID, email, profileImage, displayName, nickName, phone, company, department, refreshUserProfile } = useContext(UserContext);

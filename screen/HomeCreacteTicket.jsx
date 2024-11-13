@@ -104,29 +104,35 @@ const CreateTicketScreen = ({ navigation }) => {
 
       // บันทึกข้อมูลของ ticket ใน Firestore โดยใช้ ticketId เป็น Document ID
       await ticketRef.doc(ticketId).set({
-        displayName: displayName || '', // ชื่อเต็ม
-        phone: phone || '',
+
+        //ข้อมูลผู้ใช้และเจ้าของงาน
+        userFullName: displayName || '', // ชื่อเต็ม
+        userNickname: nickName || '',
+        userEmail: user.email,
+        userPhone: phone || '',
         company: company || '',
         department: department || '',
         employeeID: employeeID || '',
         role: role || '',
-        nickName: nickName || '',
-        ticketCount,  // เลขที่งานรันเรื่อยๆ
         profileImage: profileImage || '', // รูปโปรไฟล์
-
+        //ข้อมูลของงาน
+        ticketCount,  // เลขที่งานรันเรื่อยๆ
         title, //ชื่องาน
         descriptions, //รายละเอียด
         priority, // ระดับความสำคัญ
         category, // ประเภท
         location, // สถานที่ผู้แจ้ง
-        userEmail: user.email,
+        tags: tags || [], // แท็กหรือป้ายกำกับ
+        //สถานะและการจัดการงาน
+        status: 'Pending', // เริ่มต้นสถานะ
+        progress: 0,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        status: 'Pending', // เริ่มต้นสถานะ 
+         
         dueDate: dueDate || null, // วันที่กำหนดเสร็จ
         estimatedTime: estimatedTime || null, // เวลาโดยประมาณในการแก้ไขปัญหา
         attachments: imageUrl || null, // เอกสารหรือรูปภาพที่แนบมา
-        progress: 0,
-        tags: tags || [], // แท็กหรือป้ายกำกับ
+        
+        
         jobOwner: null, // รายละเอียดการติดตาม รับงานโดย
         lastUpdatedJobOwner: null, // วันที่ตอนรับงาน
         resolutionNotes: null, // บันทึกการแก้ปัญหาหลังจากเสร็จสิ้น

@@ -21,16 +21,16 @@ const TicketOpen = () => {
     let hoursToAdd;
 
     switch (category) {
-      case 'user':
-        hoursToAdd = 2;
+      case 'User':
+        hoursToAdd = 1;
         break;
-      case 'software':
+      case 'Software':
         hoursToAdd = 4;
         break;
-      case 'hardware':
+      case 'Hardware':
         hoursToAdd = 72;
         break;
-      case 'network':
+      case 'Network':
         hoursToAdd = 24;
         break;
       default:
@@ -518,10 +518,10 @@ const TicketOpen = () => {
                   <Text style={styles.modalDetails}>Category : {selectedJob.category || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>Priority : {selectedJob.priority || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>Location : {selectedJob.location || 'N/A'}</Text>
-                  <Text style={styles.modalDetails}>ชื่อผู้แจ้ง : {selectedJob.displayName || 'N/A'}</Text>
-                  <Text style={styles.modalDetails}>ชื่อเล่น : {selectedJob.description || 'N/A'}</Text>
+                  <Text style={styles.modalDetails}>ชื่อผู้แจ้ง : {selectedJob.userFullName || 'N/A'}</Text>
+                  <Text style={styles.modalDetails}>ชื่อเล่น : {selectedJob.userNickname || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>Email : {selectedJob.userEmail || 'N/A'}</Text>
-                  <Text style={styles.modalDetails}>เบอร์ติดต่อ : {selectedJob.phone || 'N/A'}</Text>
+                  <Text style={styles.modalDetails}>เบอร์ติดต่อ : {selectedJob.userPhone || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>Company : {selectedJob.company || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>Department : {selectedJob.department || 'N/A'}</Text>
                   <Text style={styles.modalDetails}>

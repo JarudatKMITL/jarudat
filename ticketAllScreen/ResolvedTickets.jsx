@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import {
     View,
@@ -23,129 +24,45 @@ import { firebase } from '@react-native-firebase/firestore';
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import RNFS from 'react-native-fs';
-import storage from '@react-native-firebase/storage';
 import { UserContext } from '../api/UserContext';
 import { useTheme } from '../components/ThemeContext';
 
-
-
-
-const InProgressScreen = () => {
+const ResolvedTickets = () => {
     const { role, email, profileImage, displayName, empolyeeID } = useContext(UserContext);
 
     const [progress, setProgress] = useState('');
     const [jobsProgress, setJobsProgress] = useState([]);
-
     const [imageModalVisible, setImageModalVisible] = useState(false);
     const [modalVisible, setModalVisible] = useState(false);
     const [updateModalVisible, setUpdateModalVisible] = useState(false);
     const [selectedJob, setSelectedJob] = useState(null);
-    const [resolutionNotes, setResolutionNotes] = useState('');
-    const [progressDescription, setProgressDescription] = useState('');
     const [isOrderModalVisible, setOrderModalVisible] = useState(false);
-
     const [selectedStatus, setSelectedStatus] = useState('In Progress');
     const [selectedDateSort, setSelectedDateSort] = useState('Newest');
     const [selectedCategorySort, setSelectedCategorySort] = useState('All');
     const categories = ['All', 'Hardware', 'Software', 'Network', 'User'];
-    const [estimatedTime, setEstimatedTime] = useState('');
-    const [imageDimensions, setImageDimensions] = useState({ width: 300, height: 300 }); // เก็บข้อมูลขนาดภาพเริ่มต้น
-
     const [loading, setLoading] = useState(false); // สถานะการโหลด
-
     const [seeMore, setSeeMore] = useState(false);
-
-
-    // ฟังก์ชันจัดรูปแบบเวลาให้เป็น HH:MM
-    const formatTime = (text) => {
-        let formattedText = text.replace(/[^0-9]/g, ''); // ลบตัวอักษรที่ไม่ใช่ตัวเลข
-        if (formattedText.length > 2) {
-            formattedText = `${formattedText.slice(0, 2)}:${formattedText.slice(2, 4)}`;
-        }
-        setEstimatedTime(formattedText);
-    };
-
-    // ฟังก์ชันตรวจสอบค่า progress ให้เป็นตัวเลขระหว่าง 0-100
-    const validateProgressInput = (text) => {
-        let value = text.replace(/[^0-9]/g, ''); // ลบตัวอักษรที่ไม่ใช่ตัวเลข
-        if (parseInt(value) > 100) value = '100'; // จำกัดค่าสูงสุดที่ 100
-        setProgress(value);
-    };
+    
 
     const handleUpdate = async () => {
         if (!selectedJob) return;
 
-        // ตรวจสอบรูปแบบเวลาให้เป็น HH:MM หรือเว้นว่าง
-        const timePattern = /^([01]\d|2[0-3]):([0-5]\d)$/;
-        const isValidTime = estimatedTime === '' || timePattern.test(estimatedTime);
-
-        if (!isValidTime) {
-            Alert.alert("Invalid Time Format", "Please enter time in HH:MM format or leave it blank.");
-            return;
+        // ถ้า selectedStatus เป็น "Completed" ตั้งค่า progress เป็น 100%
+        if (selectedStatus === "In Progress") {
+            progressValue = 80;
         }
-
-        // ตรวจสอบว่า progress เป็นตัวเลขในช่วง 0-100 ถ้ามีค่า หากไม่มีค่า ให้ใช้ progress ปัจจุบัน
-        let progressValue = progress !== '' ? parseInt(progress, 10) : selectedJob.progress;
-        if (isNaN(progressValue) || progressValue < 0 || progressValue > 100) {
-            Alert.alert("Invalid Progress", "Please enter a progress value between 0 and 100.");
-            return;
-        }
-
-
-
-
-        const isOverdue = selectedJob.dueDate && new Date() > selectedJob.dueDate;
-        // กำหนดสถานะเริ่มต้น
-        let newStatus = selectedStatus;
-        // ถ้า selectedStatus เป็น "Completed" และ Due Date เกินกำหนด ให้เปลี่ยนสถานะเป็น "เสร็จล่าช้า"
-        if (selectedStatus === "Completed") {
-            progressValue = 100;
-            if (isOverdue) {
-                newStatus = "Completed Late";
-            }
-        }
-
         setUpdateModalVisible(false);
         setLoading(true); // เริ่มการโหลด
 
         try {
             const jobRef = firebase.firestore().collection('tickets').doc(selectedJob.id);
 
-            // ตรวจสอบและคำนวณเวลาเสร็จงานและระยะเวลาปฏิบัติงาน
-            let completionDate = null;
-            let processingTime = null;
-
-            if (selectedStatus === "Completed" || selectedStatus === "Completed Late") {
-                completionDate = firebase.firestore.FieldValue.serverTimestamp();
-
-                // คำนวณ processingTime
-                const lastUpdatedJobOwner = selectedJob.lastUpdatedJobOwner;
-                if (lastUpdatedJobOwner) {
-                    const currentTime = new Date();
-                    const startTime = lastUpdatedJobOwner.toDate();
-
-                    const diffInMillis = currentTime - startTime;
-                    const hours = Math.floor(diffInMillis / (1000 * 60 * 60));
-                    const minutes = Math.floor((diffInMillis % (1000 * 60 * 60)) / (1000 * 60));
-
-                    processingTime = `${hours} ชม. ${minutes} นาที`;
-                }
-            }
-
-            // อัปเดตข้อมูลใน Firestore
             await jobRef.update({
-                status: newStatus,
+                status: selectedStatus,
                 progress: progressValue,
-                estimatedTime: estimatedTime || "Not specified",
-                progressDescription: progressDescription || "",
-                resolutionNotes: resolutionNotes || "",
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
-                ...(completionDate && { completionDate }), // บันทึก completionDate หากสถานะเป็น Completed
-                ...(processingTime && { processingTime }), // บันทึก processingTime หากคำนวณแล้ว
             });
-
-            // อัปเดต selectedStatus หลังจากบันทึก
-            setSelectedStatus(newStatus);
 
             // รีเฟรชข้อมูลของ selectedJob หลังบันทึก
             const updatedSnapshot = await jobRef.get();
@@ -157,21 +74,14 @@ const InProgressScreen = () => {
             Alert.alert("Error", "Failed to update the job. Please try again.");
         } finally {
             setLoading(false); // จบการโหลด
+
         }
     };
-
-
-    useEffect(() => {
-        if (selectedJob) {
-            setProgressDescription(selectedJob.progressDescription || "");
-            setResolutionNotes(selectedJob.resolutionNotes || "");
-        }
-    }, [selectedJob]);
 
     // ดึงข้อมูลที่มีสถานะ "In Progress" ครั้งเดียวเมื่อ component โหลด
     useEffect(() => {
         const ticketsRef = firebase.firestore().collection('tickets')
-            .where('status', '==', 'In Progress')
+            .where('status', 'in', ['Completed', 'Completed Late'])
             .where('jobOwnerEmail', '==', email)
             .limit(50); // จำกัดจำนวนข้อมูลที่ดึงมาในครั้งแรก
 
@@ -235,10 +145,6 @@ const InProgressScreen = () => {
         setUpdateModalVisible(false);
     };
 
-
-
-
-
     const requestStoragePermission = async () => {
         try {
             if (Platform.OS === 'android') {
@@ -301,8 +207,7 @@ const InProgressScreen = () => {
             Alert.alert('Error', 'Failed to save image: ' + error.message);
         }
     };
-
-
+    
     // ฟังก์ชันดาวน์โหลดรูปภาพเมื่อกดค้างที่รูปภาพ
     // ฟังก์ชันแสดง Alert เพื่อยืนยันก่อนบันทึกรูปภาพ
     const handleLongPressDownload = () => {
@@ -321,121 +226,49 @@ const InProgressScreen = () => {
         }
     };
 
-    // เพิ่มฟังก์ชันสำหรับกำหนดสีของจุดตามระดับความสำคัญ
-    const getPriorityColor = (priority) => {
-        switch (priority.toLowerCase()) {
-            case 'high':
-                return '#FF0000'; // สีแดงสำหรับ High
-            case 'medium':
-                return '#FFA500'; // สีส้มสำหรับ Medium
-            case 'low':
-                return '#008000'; // สีเขียวสำหรับ Low
-            default:
-                return '#808080'; // สีเทาสำหรับกรณีอื่นๆ
-        }
-    };
-
     const JobCard = ({ item, openModal }) => {
-        const animation = useRef(new Animated.Value(0)).current;
-        // ตรวจสอบว่า Due Date เกินกำหนดหรือไม่
-        const isOverdue = item.dueDate && new Date() > item.dueDate;
+        
+        // ตรวจสอบและปรับค่า hours และ minutes ก่อนแสดงผล
+        const formattedProcessingTime = () => {
+            const hours = item.processingTimeHours || 0; // สมมุติว่า item.processingTimeHours เก็บค่าชั่วโมง
+            const minutes = item.processingTimeMinutes || 0; // สมมุติว่า item.processingTimeMinutes เก็บค่านาที
 
-        useEffect(() => {
-            if (item.progress <= 80) {
-                Animated.loop(
-                    Animated.sequence([
-                        Animated.timing(animation, {
-                            toValue: 1,
-                            duration: 1000,
-                            useNativeDriver: false,
-                        }),
-                        Animated.timing(animation, {
-                            toValue: 0,
-                            duration: 1000,
-                            useNativeDriver: false,
-                        }),
-                    ])
-                ).start();
-            }
-        }, [item.progress]);
+            const displayHours = hours > 0 ? `${hours} ชม.` : '';
+            const displayMinutes = minutes > 0 ? `${minutes} นาที` : '1 นาที';
 
-        // คำนวณความกว้างของแถบ progress
-        const animatedWidth = animation.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0%', `${item.progress}%`],
-        });
-
-        // Interpolated color: จากสีแดง (FF5733) ไปสีเขียว (33FF57)
-        const animatedColor = animation.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['#FF5733', '#33FF57'],
-        });
+            return `${displayHours} ${displayMinutes}`.trim();
+        };
 
         return (
             <TouchableOpacity onPress={() => openModal(item)} style={styles.jobCard}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                     <Text style={styles.jobTitle}>{item.title}</Text>
-                    <View style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
-                        <Text style={styles.jobDetails}><Text style={styles.fontBold}>Progress:</Text> {item.progress || 0}%</Text>
-                        <View style={styles.statusBarContainer}>
-                            <Animated.View
-                                style={[
-                                    styles.statusBar,
-                                    {
-                                        width: item.progress > 80 ? `${item.progress}%` : animatedWidth,
-                                        backgroundColor: item.progress > 80 ? '#33FF57' : animatedColor, // ใช้สี interpolated
-                                    },
-                                ]}
-                            />
-                        </View>
-                    </View>
+                    {/* แสดงสถานะ โดยใช้สีตามสถานะ */}
+                    <Text
+                        style={[
+                            styles.jobDetails,
+                            { color: item.status === 'Completed' ? 'green' : item.status === 'Completed Late' ? 'red' : 'black' },
+                        ]}
+                    >
+                        {item.status}
+                    </Text>
+
                 </View>
                 <Text style={styles.jobDetails}><Text style={styles.fontBold}>Job Number:</Text> {item.id}</Text>
                 <Text style={styles.jobDetails}><Text style={styles.fontBold}>Category:</Text> {item.category}</Text>
-
-                {/* แสดง Due Date สีแดงหากเกินกำหนด */}
                 <Text style={styles.jobDetails}>
-                    <Text style={styles.fontBold}>Due Date:</Text>
-                    {item.dueDate ? (
-                        <>
-                            {item.dueDate.toLocaleDateString()}{' '}
-                            <Text style={isOverdue && { color: 'red' }}>
-                                {item.dueDate.toLocaleTimeString()}
-                            </Text>
-                        </>
-                    ) : (
-                        'No due date'
-                    )}
+                    <Text style={styles.fontBold}>Completion Date: </Text>
+                    {item.completionDate ? item.completionDate.toDate().toLocaleString() : 'No completion date'}
+                </Text>
+                <Text style={styles.jobDetails}>
+                    <Text style={styles.fontBold}>Processing Time:</Text> {formattedProcessingTime()}
                 </Text>
 
-                {/* เพิ่มจุดสีแสดงระดับความสำคัญ */}
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View
-                        style={{
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                            backgroundColor: getPriorityColor(item.priority),
-                            marginRight: 8,
-                        }}
-                    />
-                    <Text style={styles.jobDetails}>
-                        <Text style={styles.fontBold}>ระดับความสำคัญ:</Text> {item.priority}
-                    </Text>
-                </View>
             </TouchableOpacity>
         );
     };
 
-
     const renderItem = ({ item }) => <JobCard item={item} openModal={openModal} />;
-
-
-
-
-
-
-
 
     return (
         <View style={styles.container}>
@@ -447,7 +280,7 @@ const InProgressScreen = () => {
             )}
             <View style={styles.headerRow}>
                 <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle}>In Progress Jobs: {filteredJobs.length}</Text>
+                    <Text style={styles.headerTitle}>Resolved Jobs: {filteredJobs.length}</Text>
                 </View>
                 <TouchableOpacity
                     style={styles.sortButton}
@@ -456,8 +289,6 @@ const InProgressScreen = () => {
                     <Text style={styles.sortButtonText}>Sort Options</Text>
                 </TouchableOpacity>
             </View>
-
-
 
             {filteredJobs.length > 0 ? (
                 <FlatList
@@ -472,9 +303,6 @@ const InProgressScreen = () => {
                     <Text style={styles.noJobInProgressText}>No Tickets Available</Text>
                 </ScrollView>
             )}
-
-
-
             <Modal visible={modalVisible} animationType="fade" transparent={true} onRequestClose={closeModal}>
                 <View style={styles.modalBackground}>
                     <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -542,41 +370,7 @@ const InProgressScreen = () => {
             <Modal visible={updateModalVisible} animationType="fade" transparent={true} onRequestClose={closeUpdateModal}>
                 <View style={styles.detailModalContainer}>
                     <View style={styles.updateModalContent}>
-                        <Text style={styles.updateModalTitle}>Update Job</Text>
-
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder={selectedJob?.estimatedTime ? selectedJob.estimatedTime : "Estimated Time (HH:MM)"}
-                            value={estimatedTime}
-                            onChangeText={formatTime} // ใช้ formatTime ในการใส่ :
-                            keyboardType="numeric" // บังคับให้กรอกเฉพาะตัวเลข
-                            maxLength={5} // จำกัดความยาวสูงสุดเป็น 5 ตัวอักษร (HH:MM)
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder={selectedJob?.progress ? `${selectedJob.progress}%` : "Job Progress 0-100"}
-                            value={progress}
-                            onChangeText={validateProgressInput} // ใช้ validateProgressInput ในการจำกัดค่า 0-100
-                            keyboardType="numeric"
-                            maxLength={3}
-                        />
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Current Progress Description"
-                            value={progressDescription} // ใช้ state ตรงๆ
-                            onChangeText={setProgressDescription}
-                            multiline={true}
-                        />
-
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Resolution Notes"
-                            value={resolutionNotes} // ใช้ state ตรงๆ
-                            onChangeText={setResolutionNotes}
-                            multiline={true}
-                        />
-
+                        <Text style={styles.updateModalTitle}>Edit Job</Text>
                         <Picker
                             selectedValue={selectedStatus}
                             style={styles.picker}
@@ -588,8 +382,6 @@ const InProgressScreen = () => {
                             <Picker.Item label="In Progress" value="In Progress" />
                             <Picker.Item label="Completed" value="Completed" />
                         </Picker>
-
-
                         <View style={styles.updateButtonContainer}>
                             <TouchableOpacity style={styles.cancelButton} onPress={closeUpdateModal}>
                                 <Text style={styles.cancelButtonText}>Cancel</Text>
@@ -597,7 +389,6 @@ const InProgressScreen = () => {
                             <TouchableOpacity style={styles.saveButton} onPress={handleUpdate}>
                                 <Text style={styles.saveButtonText}>Save</Text>
                             </TouchableOpacity>
-
                         </View>
                     </View>
                 </View>
@@ -683,9 +474,6 @@ const InProgressScreen = () => {
         </View>
     );
 };
-
-
-
 
 const styles = StyleSheet.create({
     container: {
@@ -1044,4 +832,4 @@ const modalStyles = StyleSheet.create({
     },
 });
 
-export default InProgressScreen;
+export default ResolvedTickets;

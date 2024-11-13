@@ -6,10 +6,11 @@ import NetInfo from '@react-native-community/netinfo';
 import { NotificationProvider } from './api/NotificationContext';
 import firestore from '@react-native-firebase/firestore';
 
+
 const App = () => {
   const [isConnected, setIsConnected] = useState(null); // null เพื่อระบุสถานะเริ่มต้น
   const [showBanner, setShowBanner] = useState(false);
-
+  const [shouldHideBanner, setShouldHideBanner] = useState(false); // ตัวแปรควบคุมการซ่อนแถบ
   useEffect(() => {
     const setupFirestorePersistence = async () => {
       try {
@@ -27,20 +28,26 @@ const App = () => {
 
     setupFirestorePersistence();
 
-    const unsubscribeNetInfo = NetInfo.addEventListener((state) => {
+    const unsubscribeNetInfo = NetInfo.addEventListener(state => {
       if (isConnected === null) {
-        setIsConnected(state.isConnected); // ตั้งสถานะครั้งแรกโดยไม่แสดงแบนเนอร์
+        // กำหนดสถานะครั้งแรกโดยไม่แสดงแถบแจ้งเตือน
+        setIsConnected(state.isConnected);
       } else if (state.isConnected !== isConnected) {
+        // เมื่อสถานะการเชื่อมต่อเปลี่ยนไป ให้แสดงแถบแจ้งเตือน
         setIsConnected(state.isConnected);
         setShowBanner(true);
+        setShouldHideBanner(false); // รีเซ็ตสถานะการซ่อนแถบ
 
         if (state.isConnected) {
+          // ถ้าเชื่อมต่อกลับมาเป็นปกติ ให้ตั้งเวลาเพื่อซ่อนแถบหลัง 5 วินาที
+          setShouldHideBanner(true);
           setTimeout(() => {
             setShowBanner(false);
           }, 4000);
         }
       }
     });
+
 
     return () => {
       unsubscribeNetInfo();

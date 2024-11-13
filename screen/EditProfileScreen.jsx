@@ -1,6 +1,7 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { Alert, View, Modal, Pressable, TouchableOpacity, StatusBar, ScrollView, TextInput, ActivityIndicator, StyleSheet } from 'react-native';
 import { Avatar, Text } from 'react-native-paper';
+import { PermissionsAndroid, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icon1 from 'react-native-vector-icons/Ionicons';
 import Icon2 from 'react-native-vector-icons/MaterialIcons';
@@ -50,6 +51,53 @@ const EditProfileScreen = ({ navigation }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [tempEmployeeID, setTempEmployeeID] = useState(employeeID);
     const [isConnected, setIsConnected] = useState(true);
+
+
+
+    const requestGalleryPermission = async () => {
+        if (Platform.OS === 'android') {
+          try {
+            if (Platform.Version >= 33) {
+              // Android 13 ขึ้นไป ใช้ READ_MEDIA_IMAGES
+              const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+                {
+                  title: 'Gallery Permission',
+                  message: 'This app needs access to your gallery to select photos.',
+                  buttonNeutral: 'Ask Me Later',
+                  buttonNegative: 'Cancel',
+                  buttonPositive: 'OK',
+                }
+              );
+              return granted === PermissionsAndroid.RESULTS.GRANTED;
+            } else {
+              // Android ต่ำกว่า 13 ใช้ READ_EXTERNAL_STORAGE
+              const granted = await PermissionsAndroid.request(
+                PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+                {
+                  title: 'Gallery Permission',
+                  message: 'This app needs access to your gallery to select photos.',
+                  buttonNeutral: 'Ask Me Later',
+                  buttonNegative: 'Cancel',
+                  buttonPositive: 'OK',
+                }
+              );
+              return granted === PermissionsAndroid.RESULTS.GRANTED;
+            }
+          } catch (err) {
+            console.warn(err);
+            return false;
+          }
+        } else {
+          return true; // สำหรับ iOS
+        }
+      };
+      
+
+
+
+
+
 
 
     useEffect(() => {
@@ -184,21 +232,40 @@ const EditProfileScreen = ({ navigation }) => {
     };
 
     // Select image from library
-    const selectImageFromLibrary = () => {
+    const selectImageFromLibrary = async () => {
+        const hasPermission = await requestGalleryPermission();
+        if (!hasPermission) {
+            Alert.alert(
+              'Permission Denied',
+              'Cannot access gallery without permission. Please enable gallery access in Settings.',
+              [
+                {
+                  text: 'Open Settings',
+                  onPress: () => Linking.openSettings(),
+                },
+                { text: 'Cancel', style: 'cancel' },
+              ]
+            );
+            return;
+          }
+      
+        // เปิด Image Picker หลังจากที่ผู้ใช้ให้สิทธิ์แล้ว
         ImagePicker.openPicker({
-            cropping: true,
-            width: 300,
-            height: 300,
-        }).then(image => {
+          cropping: true,
+          width: 300,
+          height: 300,
+        })
+          .then(image => {
             setSelectedImage(image.path);
             setTempProfileImage(image.path);
             setModalVisible(false);
-        }).catch(error => {
+          })
+          .catch(error => {
             if (error.message !== 'User cancelled image selection') {
-                console.log('Error picking image:', error);
+              console.log('Error picking image:', error);
             }
-        });
-    };
+          });
+      };
 
     // Capture image with camera
     const takePhotoWithCamera = () => {
@@ -219,22 +286,49 @@ const EditProfileScreen = ({ navigation }) => {
     };
 
     // Remove profile image
-    const handleRemoveProfileImage = async () => {
-        try {
-            const userDocRef = firebase.firestore().collection('users').doc(user.email);
-            await userDocRef.update({ profileImage: null });
-            await user.updateProfile({ photoURL: null });
-            setTempProfileImage(null);
-            setSelectedImage(null);
-            Alert.alert('Profile image removed successfully!');
-            setModalVisible(false);
-        } catch (error) {
-            console.log('Error removing profile image:', error);
-            Alert.alert('Failed to remove profile image. Try again later.');
+   // ฟังก์ชันลบรูปโปรไฟล์
+const handleRemoveProfileImage = async () => {
+    try {
+        // ดึง path ของไฟล์จาก URL ถ้า `tempProfileImage` เป็น URL
+        let filename;
+        if (tempProfileImage.startsWith('https://')) { // ตรวจสอบว่าเป็น URL หรือไม่
+            const regex = /profileImages%2F([^?]+)/; // กำหนดรูปแบบสำหรับดึงชื่อไฟล์
+            const match = tempProfileImage.match(regex);
+            if (match && match[1]) {
+                filename = `profileImages/${decodeURIComponent(match[1])}`; // แปลงให้ได้ path ที่ Firebase เข้าใจ
+            } else {
+                console.log('Error: ไม่สามารถดึงชื่อไฟล์จาก URL ได้');
+                return;
+            }
+        } else {
+            // ถ้าไม่ใช่ URL ใช้วิธีดึงชื่อไฟล์แบบธรรมดา
+            filename = `profileImages/${tempProfileImage.split('/').pop()}`;
         }
-    };
+
+        // ลบรูปภาพจาก Firebase Storage
+        const storageRef = storage().ref(filename);
+        await storageRef.delete(); // ลบไฟล์จาก storage
+
+        // ลบข้อมูลรูปภาพออกจาก Firestore
+        const userDocRef = firestore().collection('users').doc(user.email);
+        await userDocRef.update({ profileImage: null });
+
+        // อัปเดตโปรไฟล์ของผู้ใช้ในแอป
+        await user.updateProfile({ photoURL: null });
+
+        // อัปเดต state ภายในแอป
+        setTempProfileImage(null);
+        setSelectedImage(null);
+        Alert.alert('ลบรูปโปรไฟล์เรียบร้อยแล้ว!');
+        setModalVisible(false);
+    } catch (error) {
+        console.log('Error removing profile image:', error);
+        Alert.alert('ไม่สามารถลบรูปโปรไฟล์ได้ กรุณาลองใหม่อีกครั้ง');
+    }
+};
 
 
+    
 
 
 

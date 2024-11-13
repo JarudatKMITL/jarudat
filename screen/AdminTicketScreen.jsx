@@ -8,17 +8,34 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import { NotificationContext } from '../api/NotificationContext';
 import { PanResponder } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Vibration } from 'react-native';
+import { LanguageContext } from '../components/LanguageContext';
+import { useTranslation } from 'react-i18next';
 
-const AdminTicketScreen = ({ navigation }) => {
+
+const AdminTicketScreen = ({ navigation, }) => {
+
   const { profileImage, displayName, employeeID } = useContext(UserContext);
   const { theme, colorScheme } = useTheme();
-  const { notifications, notificationCount, setNotificationCount } = useContext(NotificationContext);
+  const { t } = useTranslation();
 
   const [isModalVisible, setModalVisible] = useState(false);
-  const [localNotifications, setLocalNotifications] = useState(notifications); // เริ่มต้นด้วยการตั้งค่าจาก notifications
+  const [localNotifications, setLocalNotifications] = useState([]); // เริ่มต้นด้วยอาร์เรย์ว่าง
 
-  
-  // โหลดการแจ้งเตือนจาก AsyncStorage เมื่อคอมโพเนนต์ถูกสร้าง
+  const { notifications = [], newNotificationCount = 0, resetNotificationCount, clearAllNotifications } = useContext(NotificationContext);
+
+  const notifyUser = () => {
+    // ตรวจสอบว่ามีการแจ้งเตือนเข้ามาหรือไม่
+    Vibration.vibrate(500);
+  };
+  useEffect(() => {
+    // สมมติว่ามี state ที่ใช้ในการเก็บการแจ้งเตือน
+    if (notifications.length > 0) {
+      notifyUser(); // เรียกใช้ฟังก์ชันสั่นเมื่อมีการแจ้งเตือนใหม่
+    }
+  }, [notifications]); // ตรวจสอบการเปลี่ยนแปลงของ notifications
+
+  /// โหลดการแจ้งเตือนจาก AsyncStorage เมื่อเริ่มต้น
   useEffect(() => {
     const loadNotifications = async () => {
       try {
@@ -32,12 +49,12 @@ const AdminTicketScreen = ({ navigation }) => {
     loadNotifications();
   }, []);
 
-  // อัปเดต localNotifications เมื่อ notifications เปลี่ยนแปลง
+  // อัปเดต localNotifications เมื่อ notifications จาก Context เปลี่ยนแปลง
   useEffect(() => {
     setLocalNotifications(notifications);
   }, [notifications]);
 
-  // บันทึก localNotifications ลงใน AsyncStorage ทุกครั้งที่มีการเปลี่ยนแปลง
+  // บันทึกการแจ้งเตือนลงใน AsyncStorage
   useEffect(() => {
     const saveNotifications = async () => {
       try {
@@ -49,19 +66,32 @@ const AdminTicketScreen = ({ navigation }) => {
     };
     saveNotifications();
   }, [localNotifications]);
-
-  const resetNotificationCount = () => {
-    setNotificationCount(0);
-  };
-
+  // ฟังก์ชันเปิด/ปิด Modal
   const openNotificationModal = () => {
     setModalVisible(true);
-    resetNotificationCount();
+    resetNotificationCount(); // รีเซ็ตจำนวนการแจ้งเตือนใหม่เมื่อเปิด Modal
   };
-
   const closeModal = () => {
     setModalVisible(false);
   };
+
+  // ฟังก์ชันเคลียร์การแจ้งเตือนทั้งหมด
+  const handleClearAll = () => {
+    clearAllNotifications();
+    setLocalNotifications([]);
+    setModalVisible(false);
+  };
+
+
+
+
+
+
+
+
+
+
+
 
   const scaleValue = useRef(new Animated.Value(1)).current;
 
@@ -80,6 +110,7 @@ const AdminTicketScreen = ({ navigation }) => {
       useNativeDriver: true,
     }).start();
   };
+
 
 
   const styles = StyleSheet.create({
@@ -179,7 +210,7 @@ const AdminTicketScreen = ({ navigation }) => {
     serviceIcon: {
       width: wp('20%'),
       height: wp('20%'),
-      marginBottom: hp('1%'),
+      marginBottom: hp('2.3%'),
     },
     serviceLabel: {
       fontSize: wp('4%'),
@@ -265,12 +296,12 @@ const AdminTicketScreen = ({ navigation }) => {
         { useNativeDriver: false }
       ),
       onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -150) {
+        if (gestureState.dx < -150) { // ตรวจสอบว่าปัดซ้ายมากกว่า 150 พิกเซล
           Animated.timing(pan, {
             toValue: { x: -500, y: 0 },
             duration: 200,
             useNativeDriver: true,
-          }).start(() => onRemove(index));
+          }).start(() => onRemove(index)); // ลบการแจ้งเตือนเมื่อปัดซ้ายสำเร็จ
         } else {
           Animated.spring(pan, {
             toValue: { x: 0, y: 0 },
@@ -286,12 +317,21 @@ const AdminTicketScreen = ({ navigation }) => {
         {...panResponder.panHandlers}
       >
         <TouchableOpacity activeOpacity={0.7} onPress={() => alert('Notification pressed')}>
-          <Text style={styles.notificationTitle}>{item.notification?.title || "Notification"}</Text>
-          <Text style={styles.notificationBody}>{item.notification?.body || "No details"}</Text>
+          <Text style={styles.notificationTitle}>{item.title || "Notification"}</Text>
+          <Text style={styles.notificationBody}>{item.body || "No details"}</Text>
         </TouchableOpacity>
       </Animated.View>
     );
   };
+
+  const removeNotification = (index) => {
+    setLocalNotifications((prev) => {
+      const updatedNotifications = prev.filter((_, i) => i !== index);
+      AsyncStorage.setItem('@notifications', JSON.stringify(updatedNotifications)); // อัปเดต AsyncStorage
+      return updatedNotifications;
+    });
+  };
+
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
@@ -307,7 +347,7 @@ const AdminTicketScreen = ({ navigation }) => {
         <View style={styles.userInfo}>
           <Text style={styles.greeting}>Hello</Text>
           <Text style={styles.userName}>{displayName}</Text>
-          <Text style={styles.userName}>Employ ID : {employeeID}</Text>
+          <Text style={styles.userName}>{t('employee_id')} : {employeeID}</Text>
         </View>
 
         <TouchableOpacity
@@ -315,15 +355,17 @@ const AdminTicketScreen = ({ navigation }) => {
           onPress={openNotificationModal}
         >
           <Ionicons name="notifications-outline" size={28} color="white" />
-          {notificationCount > 0 && (
+          {localNotifications.length > 0 && (
             <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>{notificationCount}</Text>
+              <Text style={styles.notificationBadgeText}>{localNotifications.length}</Text>
             </View>
           )}
         </TouchableOpacity>
 
+
         <TouchableOpacity
-          onPress={() => navigation.navigate('ProfileStack', { screen: 'Profile1' })}
+          onPress={() => navigation.navigate('Profile', { screen: 'Profile1' })}
+
         >
           <Image source={{ uri: profileImage }} style={styles.profileIcon} />
         </TouchableOpacity>
@@ -365,19 +407,31 @@ const AdminTicketScreen = ({ navigation }) => {
             <Text style={styles.serviceLabel}>Ticket In Progress</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.serviceItem} onPressIn={onPressIn} onPressOut={onPressOut}>
+          <TouchableOpacity
+            style={styles.serviceItem}
+            onPress={() => navigation.navigate('Resolved')}
+            onPressIn={onPressIn}
+            onPressOut={onPressOut}>
             <Image source={require('../assets/images/ticketss.png')} style={styles.serviceIcon} />
             <Text style={styles.serviceLabel}>Ticket Resolved</Text>
           </TouchableOpacity>
         </View>
-
+        
         <View style={styles.serviceGrid}>
-          <TouchableOpacity style={styles.serviceItem} onPressIn={onPressIn} onPressOut={onPressOut}>
+          <TouchableOpacity 
+          style={styles.serviceItem}
+          onPress={() => navigation.navigate('ListTickets')} 
+          onPressIn={onPressIn} 
+          onPressOut={onPressOut}>
             <Image source={require('../assets/images/listTicket.png')} style={styles.serviceIcon} />
             <Text style={styles.serviceLabel}>Ticket List</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity style={styles.serviceItem} onPressIn={onPressIn} onPressOut={onPressOut}>
+          
+          <TouchableOpacity 
+          style={styles.serviceItem} 
+          onPress={() => navigation.navigate('SummaryTickets')} 
+          onPressIn={onPressIn} 
+          onPressOut={onPressOut}>
             <Image source={require('../assets/images/sumTicket.png')} style={styles.serviceIcon} />
             <Text style={styles.serviceLabel}>Ticket Summary</Text>
           </TouchableOpacity>
@@ -403,7 +457,7 @@ const AdminTicketScreen = ({ navigation }) => {
                     key={index}
                     item={item}
                     index={index}
-                    onRemove={() => setLocalNotifications((prev) => prev.filter((_, i) => i !== index))}
+                    onRemove={() => removeNotification(index)}
                   />
                 ))}
               </ScrollView>
@@ -419,17 +473,18 @@ const AdminTicketScreen = ({ navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.clearButton}
-                onPress={() => {
-                  setLocalNotifications([]); // เคลียร์การแจ้งเตือน
-                  closeModal(); // ปิดโมดัล
-                }}
+                onPress={handleClearAll}
               >
                 <Text style={styles.buttonText}>Clear All</Text>
               </TouchableOpacity>
+
+
             </View>
           </View>
         </View>
       </Modal>
+
+
     </ScrollView>
   );
 };

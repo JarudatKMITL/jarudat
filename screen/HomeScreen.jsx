@@ -3,20 +3,23 @@ import { View, Text, TouchableOpacity, StyleSheet, Image, Button } from 'react-n
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { AuthContext } from "../navigations/AuthProvider";
 import { useTheme } from '../components/ThemeContext'; // Adjust the path accordingly
-
+import { useTranslation } from 'react-i18next';
+import { LanguageContext } from '../components/LanguageContext';
 
 const HomeScreen = ({ navigation }) => {
   const { logout, user } = useContext(AuthContext);
   //console.log('user', user);
   const { theme, toggleColorScheme } = useTheme(); // Accessing the theme and toggle function
 
-
+  const { t } = useTranslation();
+  const { toggleLanguage } = useContext(LanguageContext);
   return (
     <SafeAreaView className='flex-1 justify-center items-center'>
 
-      
 
 
+      <Text>{t('welcome')}</Text>
+      <Button title={t('change_language')} onPress={toggleLanguage} />
 
       <TouchableOpacity onPress={(logout)}>
         <Text>Loginout</Text>

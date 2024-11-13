@@ -20,6 +20,9 @@ import UserTicketScreen from '../screen/UserTicketScreen';
 import TicketOpen from '../ticketAllScreen/TicketOpenAdmin';
 import InProgressScreen from '../ticketAllScreen/InProgress';
 import { DrawerHomeApp } from '../components/DrawerHome';
+import ResolvedTickets from '../ticketAllScreen/ResolvedTickets';
+import AllTickets from '../ticketAllScreen/ListTickets';
+import SummaryTicket from '../ticketAllScreen/SummaryTicket';
 
 // สร้าง Stack Navigators
 const Stack = createStackNavigator();
@@ -198,6 +201,80 @@ const TicketStack = ({ navigation }) => {
                     ),
                 }}
             />
+
+            <Stack.Screen
+                name="Resolved"
+                component={ResolvedTickets}
+                options={{
+                    headerTitle: 'Resoved Ticket',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
+                            />
+                        </View>
+                    ),
+                }}
+            />
+            <Stack.Screen
+                name="ListTickets"
+                component={AllTickets}
+                options={{
+                    headerTitle: 'Resoved Ticket',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
+                            />
+                        </View>
+                    ),
+                }}
+            />
+
+            <Stack.Screen
+                name="SummaryTickets"
+                component={SummaryTicket}
+                options={{
+                    headerTitle: 'SummaryTickets',
+                    headerTitleAlign: 'center',
+                    headerTitleStyle: {
+                        color: theme.textColor,
+                        fontFamily: 'Poppins-SemiBold',
+                        fontSize: 20,
+                    },
+                    headerLeft: () => (
+                        <View style={{ marginLeft: 10 }}>
+                            <Ionicons.Button
+                                name="arrow-back"
+                                size={25}
+                                backgroundColor={theme.backgroundColor}
+                                color={theme.textColor}
+                                onPress={() => navigation.navigate(role === 'admin' ? 'AdminTicket' : 'UserTickets')}
+                            />
+                        </View>
+                    ),
+                }}
+            />
         </Stack.Navigator>
     );
 };
@@ -329,62 +406,62 @@ const HomeDrawer = ({ navigation }) => (
 // ใช้ Bottom Tab เป็นโครงสร้างหลักใน Drawer Navigator
 const AppBottomTabs = () => {
     const { theme } = useTheme();
-  
+
     return (
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
-  
-            if (route.name === 'Home') {
-              iconName = 'home-outline';
-            } else if (route.name === 'Tickets') {
-              iconName = 'newspaper-outline';
-            } else if (route.name === 'Knowledge') {
-              iconName = 'school-outline';
-            } else if (route.name === 'Profile') {
-              iconName = 'person-outline';
-            }
-  
-            // เพิ่มแอนิเมชันการขยายของไอคอน
-            const animatedStyle = useAnimatedStyle(() => {
-              return {
-                transform: [{ scale: withTiming(focused ? 1.2 : 1, { duration: 200 }) }],
-              };
-            });
-  
-            return (
-              <Animated.View style={animatedStyle}>
-                <Ionicons name={iconName} size={size} color={color} />
-              </Animated.View>
-            );
-          },
-          tabBarBackground: () => (
-            <LinearGradient
-              colors={[theme.tabBarBackgroundColor, theme.backgroundColor]}
-              style={{ flex: 1 }}
-            />
-          ),
-          tabBarActiveTintColor: theme.tabBarActiveTintColor,
-          tabBarInactiveTintColor: theme.tabBarInactiveTintColor,
-          tabBarShowLabel: false, // ซ่อนชื่อของแท็บเพื่อให้ดูสะอาดขึ้น
-          tabBarStyle: {
-            backgroundColor: theme.tabBarBackgroundColor, // พื้นหลังของแท็บ
-            borderTopWidth: 0, // ซ่อนขอบบนของแท็บ
-            paddingBottom: 5,
-            paddingTop: 5,
-            height: 60, // เพิ่มความสูงของแท็บเพื่อให้ดูเด่น
-          },
-        })}
-      >
-        <Tab.Screen name="Home" component={HomeDrawer} options={{ headerShown: false }} />
-        <Tab.Screen name="Tickets" component={TicketStack} options={{ headerShown: false }} />
-        <Tab.Screen name="Knowledge" component={KnowledgeStack} options={{ headerShown: false }} />
-        <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
-      </Tab.Navigator>
+        <Tab.Navigator
+            screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                    let iconName;
+
+                    if (route.name === 'Home') {
+                        iconName = 'home-outline';
+                    } else if (route.name === 'Tickets') {
+                        iconName = 'newspaper-outline';
+                    } else if (route.name === 'Knowledge') {
+                        iconName = 'school-outline';
+                    } else if (route.name === 'Profile') {
+                        iconName = 'person-outline';
+                    }
+
+                    // เพิ่มแอนิเมชันการขยายของไอคอน
+                    const animatedStyle = useAnimatedStyle(() => {
+                        return {
+                            transform: [{ scale: withTiming(focused ? 1.2 : 1, { duration: 200 }) }],
+                        };
+                    });
+
+                    return (
+                        <Animated.View style={animatedStyle}>
+                            <Ionicons name={iconName} size={size} color={color} />
+                        </Animated.View>
+                    );
+                },
+                tabBarBackground: () => (
+                    <LinearGradient
+                        colors={[theme.tabBarBackgroundColor, theme.backgroundColor]}
+                        style={{ flex: 1 }}
+                    />
+                ),
+                tabBarActiveTintColor: theme.tabBarActiveTintColor,
+                tabBarInactiveTintColor: theme.tabBarInactiveTintColor,
+                tabBarShowLabel: false, // ซ่อนชื่อของแท็บเพื่อให้ดูสะอาดขึ้น
+                tabBarStyle: {
+                    backgroundColor: theme.tabBarBackgroundColor, // พื้นหลังของแท็บ
+                    borderTopWidth: 0, // ซ่อนขอบบนของแท็บ
+                    paddingBottom: 5,
+                    paddingTop: 5,
+                    height: 60, // เพิ่มความสูงของแท็บเพื่อให้ดูเด่น
+                },
+            })}
+        >
+            <Tab.Screen name="Home" component={HomeDrawer} options={{ headerShown: false }} />
+            <Tab.Screen name="Tickets" component={TicketStack} options={{ headerShown: false }} />
+            <Tab.Screen name="Knowledge" component={KnowledgeStack} options={{ headerShown: false }} />
+            <Tab.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
+        </Tab.Navigator>
     );
-  };
-  
+};
+
 
 
 export default AppBottomTabs
