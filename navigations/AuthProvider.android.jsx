@@ -10,6 +10,19 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children, navigation }) => {
     const [user, setUser] = useState(null);
 
+
+    useEffect(() => {
+        const subscriber = auth().onAuthStateChanged((user) => {
+            console.log('Auth State Changed. Current User:', user); // ตรวจสอบการเปลี่ยนแปลง State
+            setUser(user);
+        });
+
+        return subscriber; // Unsubscribe เมื่อ component ถูก unmount
+    }, []);
+
+    console.log('AuthProvider User:', user); // ตรวจสอบ User ในทุกครั้งที่ AuthProvider render
+
+
     return (
         <AuthContext.Provider
             value={{
@@ -17,21 +30,39 @@ export const AuthProvider = ({ children, navigation }) => {
                 setUser,
                 login: async (email, password) => {
                     try {
-                        await auth().signInWithEmailAndPassword(email, password)
+                        // เก็บผลลัพธ์จากการล็อกอิน
+                        const userCredential = await auth().signInWithEmailAndPassword(email, password);
+                        const user = userCredential.user; // ดึงข้อมูลผู้ใช้
 
-                        setUser(auth().currentUser);
-                    }
-                    catch (e) {
+                        // ตรวจสอบสถานะ emailVerified
+                        if (!user.emailVerified) {
+                            await auth().signOut(); // เซ็นออกทันทีหากยังไม่ได้ยืนยันอีเมล
+                            Alert.alert(
+                                'Email Verification Required',
+                                'Please verify your email before logging in. Check your email inbox or spam folder.'
+                            );
+                            return;
+                        }
+
+                        // ตั้งค่าผู้ใช้เมื่อเข้าสู่ระบบสำเร็จและยืนยันอีเมลแล้ว
+                        setUser(user);
+                        //Alert.alert('Success', 'Login successful!');
+                    } catch (e) {
                         console.log(e);
-                        if (e.code === 'auth/invalid-credential') {
+
+                        // จัดการข้อผิดพลาดการล็อกอิน
+                        if (e.code === 'auth/wrong-password') {
                             Alert.alert('Login Error', 'Incorrect password.');
                         } else if (e.code === 'auth/user-not-found') {
                             Alert.alert('Login Error', 'No user found with this email.');
+                        } else if (e.code === 'auth/invalid-email') {
+                            Alert.alert('Login Error', 'Invalid email address.');
                         } else {
                             Alert.alert('Login Error', 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
                         }
                     }
                 },
+
                 googleLogin: async () => {
                     try {
                         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true }); // เช็คว่ามี Google Play Services
@@ -73,30 +104,52 @@ export const AuthProvider = ({ children, navigation }) => {
                         const userDocRef = firebase.firestore().collection('users').doc(email);
                         const userDoc = await userDocRef.get();
 
-                        // บันทึกข้อมูลครั้งแรกโดยตรวจสอบว่ารูปภาพไม่เป็น null
                         if (!userDoc.exists) {
+                            // ถ้าไม่มีเอกสารใน Firestore ให้สร้างใหม่
+                            console.log("Creating new user document...");
                             await userDocRef.set({
                                 email: email,
                                 role: role,
                                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                                 displayName: displayName || "No Name", // ตั้งค่าเริ่มต้นหาก displayName เป็น null
                                 profileImage: photoURL || "default_image_url", // ตั้งค่าเริ่มต้นหาก photoURL เป็น null
-                                role_status: "pending",
+                                role_status: "pending", // ตั้งค่า role_status เป็นค่าเริ่มต้น
                             });
                         } else {
                             // ถ้ามีเอกสารอยู่แล้ว อัปเดตเฉพาะฟิลด์ที่ไม่มีอยู่
+                            console.log("Updating existing user document...");
+                            const userData = userDoc.data();
                             const updateData = {};
-                            if (!userDoc.data().displayName && displayName) {
+
+                            // อัปเดต displayName เฉพาะกรณีที่ยังไม่มีค่าในเอกสาร
+                            if (!userData.displayName && displayName) {
                                 updateData.displayName = displayName;
                             }
-                            if (!userDoc.data().profileImage && photoURL) {
+
+                            // อัปเดต profileImage เฉพาะกรณีที่ยังไม่มีค่าในเอกสาร
+                            if (!userData.profileImage && photoURL) {
                                 updateData.profileImage = photoURL;
                             }
+
+                            // อัปเดต role_status เฉพาะกรณีที่ไม่มีในเอกสาร
+                            if (!userData.role_status) {
+                                updateData.role_status = "pending"; // ตั้งค่า role_status ถ้ายังไม่มี
+                            }
+
+                            // อัปเดต role และ email
                             updateData.email = email;
                             updateData.role = role;
 
-                            await userDocRef.set(updateData, { merge: true });
+                            // ถ้ามีฟิลด์ที่ต้องอัปเดตให้ทำการอัปเดต
+                            if (Object.keys(updateData).length > 0) {
+                                await userDocRef.set(updateData, { merge: true }); // ใช้ merge: true เพื่อป้องกันการเขียนทับข้อมูลเดิม
+                                console.log("Document updated with:", updateData);
+                            } else {
+                                console.log("No fields to update.");
+                            }
                         }
+
+
                         // ตรวจสอบการบันทึกบทบาทใน Firestore
                         const savedUserDoc = await userDocRef.get();
                         //console.log('Saved role in Firestore:', savedUserDoc.data().role);
@@ -196,70 +249,97 @@ export const AuthProvider = ({ children, navigation }) => {
 
 
                 register: async (email, password) => {
-                    // ตรวจสอบค่าว่างและรูปแบบของอีเมลก่อนสมัครสมาชิก
                     if (!email || !password) {
                         Alert.alert('Error', 'Email and password cannot be empty.');
                         return;
                     }
-                    // ตรวจสอบรูปแบบอีเมลตามมาตรฐานทั่วไป
+
                     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
                     if (!emailPattern.test(email)) {
                         Alert.alert('Error', 'Please enter a valid email address.');
                         return;
                     }
-                    // ตรวจสอบว่าอีเมลมีอยู่ในฐานข้อมูลหรือไม่
-                    const signInMethods = await auth().fetchSignInMethodsForEmail(email);
-                    if (signInMethods.length > 0) {
-                        Alert.alert('Error', 'This email address is already registered.');
+
+                    try {
+                        console.log('Checking if email is already registered...');
+                        const signInMethods = await auth().fetchSignInMethodsForEmail(email);
+                        if (signInMethods.length > 0) {
+                            Alert.alert('Error', 'This email address is already registered.');
+                            return;
+                        }
+                    } catch (e) {
+                        console.log('Error fetching sign-in methods:', e);
+                        if (e.code === 'auth/network-request-failed') {
+                            Alert.alert('Error', 'Network error. Please check your connection.');
+                        } else {
+                            Alert.alert('Error', 'Unable to verify email. Please try again later.');
+                        }
                         return;
                     }
 
-                    try {
-                        const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-                        const uid = userCredential.user.uid; // ดึง UID ของผู้ใช้ที่ลงทะเบียน
-                        let role = 'user'; // ตั้งค่าเริ่มต้นเป็น user
+                    let emailVerificationSent = false;
 
-                        // ตรวจสอบบทบาทจาก Firestore คอลเลคชัน "roles"
-                        const roleDocRef = firebase.firestore().collection('roles').doc(email); // ใช้อีเมลเป็นไอดีในคอลเลคชัน
+                    try {
+                        console.log('Creating user...');
+                        const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+                        const user = userCredential.user;
+
+                        //console.log('Saving user data to Firestore...');
+                        // ตรวจสอบบทบาทจาก Firestore คอลเลคชั่น "roles"
+                        const roleDocRef = firebase.firestore().collection('roles').doc(email);
                         const roleDoc = await roleDocRef.get();
+                        let role = 'user'; // บทบาทเริ่มต้นเป็น 'user'
 
                         if (roleDoc.exists) {
                             const roleData = roleDoc.data();
                             if (roleData.role === 'admin') {
-                                role = 'admin'; // ถ้าเจออีเมลในฐานข้อมูล role ให้กำหนดเป็น admin
+                                role = 'admin'; // ถ้าเจออีเมลในฐานข้อมูล role เป็น admin
                             }
                         }
-
-
-                        // บันทึกข้อมูลบทบาทลงในคอลเลคชัน "users"
-                        const userDocRef = firebase.firestore().collection('users').doc(email);
+                        const userDocRef = firebase.firestore().collection('users').doc(user.email);
                         await userDocRef.set({
                             email: email,
-                            role: role,  // บทบาทที่ถูกตรวจสอบ
+                            role: role,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                            profileImage: 'https://scontent.fbkk5-1.fna.fbcdn.net/v/t1.30497-1/84628273_176159830277856_972693363922829312_n.jpg?stp=c379.0.1290.1290a_cp0_dst-jpg_s50x50&_nc_cat=1&ccb=1-7&_nc_sid=7565cd&_nc_ohc=ks_dq1OtD9AQ7kNvgEd-JFx&_nc_zt=24&_nc_ht=scontent.fbkk5-1.fna&edm=AHgPADgEAAAA&_nc_gid=AyPkfzVhyf7oK1oDNQ6zMHF&oh=00_AYDWFYopKE52e6IZqZVk3JRj88lyMsOjagrsXHoyIOMpTA&oe=673B3E59',
+                            profileImage: 'https://example.com/default-profile.jpg',
                             displayName: 'Untitled',
                             role_status: "pending",
+                            emailVerified: false,
                         });
 
+                        console.log('Sending email verification...');
+                        if (user) {
+                            try {
+                                await user.sendEmailVerification();
+                                emailVerificationSent = true;
 
-                        Alert.alert('Success', 'Registration successful!', [
-                            { text: 'OK', } // กลับไปยังหน้าล็อกอิน
-                        ]);
-                        await auth().signOut();
+                            } catch (error) {
+                                console.log('Error sending email verification:', error);
+                                Alert.alert('Error', 'Failed to send verification email.');
+                            }
+                        }
                     } catch (e) {
-                        console.log(e);
+                        console.log('Error during registration process:', e);
+                        if (!emailVerificationSent) {
+                            Alert.alert('Error', 'Failed to send verification email.');
+                        }
+
+                        if (!e || !e.code) {
+                            console.log('No specific error code found. Skipping error alert.');
+                            return;
+                        }
+
                         if (e.code === 'auth/email-already-in-use') {
                             Alert.alert('Error', 'This email address is already in use.');
                         } else if (e.code === 'auth/invalid-email') {
                             Alert.alert('Error', 'The email address is badly formatted.');
                         } else if (e.code === 'auth/weak-password') {
                             Alert.alert('Error', 'The password is too weak.');
-                        } else {
-                            Alert.alert('Error', 'Something went wrong. Please try again.');
                         }
                     }
                 },
+
+
                 resetPassword: async (email) => {
                     if (!email) {
                         Alert.alert('Error', 'Please enter your email to reset the password.');
@@ -281,16 +361,17 @@ export const AuthProvider = ({ children, navigation }) => {
                         }
 
                         await auth().sendPasswordResetEmail(emailTrimmed);
-                        Alert.alert('Success', 'Password reset email sent. Please check your email.');
+                        //Alert.alert('Success', 'Password reset email sent. Please check your email.');
                     } catch (e) {
                         console.log('Error fetching sign-in methods:', e);
                         if (e.code === 'auth/invalid-email') {
                             Alert.alert('Error', 'The email address is badly formatted.');
                         } else {
-                            Alert.alert('Error', 'Something went wrong. Please try again.');
+                            //Alert.alert('Error', 'Something went wrong. Please try again.');
                         }
                     }
                 },
+
                 logout: async () => {
                     try {
                         // ออกจากระบบ Firebase ก่อน

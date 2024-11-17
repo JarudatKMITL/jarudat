@@ -5,11 +5,13 @@ import Providers from './navigations';
 import NetInfo from '@react-native-community/netinfo';
 import { NotificationProvider } from './api/NotificationContext';
 import firestore from '@react-native-firebase/firestore';
-
+import CustomSplashScreen from './components/SplashScreen';
+import LottieSplashScreen from "react-native-lottie-splash-screen";
 
 const App = () => {
   const [isConnected, setIsConnected] = useState(null); // null เพื่อระบุสถานะเริ่มต้น
   const [showBanner, setShowBanner] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [shouldHideBanner, setShouldHideBanner] = useState(false); // ตัวแปรควบคุมการซ่อนแถบ
   useEffect(() => {
     const setupFirestorePersistence = async () => {
@@ -48,12 +50,30 @@ const App = () => {
       }
     });
 
-
     return () => {
       unsubscribeNetInfo();
     };
   }, [isConnected]);
 
+  useEffect(() => {
+    console.log('Splash Screen Started');
+    setTimeout(() => {
+      console.log('Splash Screen Timeout Completed');
+      LottieSplashScreen.hide();
+      setLoading(false);
+    }, 7000); // รอ 3 วินาที
+  }, []);
+  
+
+  if (loading) {
+    console.log('App is still loading');
+    return <CustomSplashScreen />;
+  }
+
+ 
+
+
+  console.log('App Finished Loading - Showing Providers');
   return (
     <NotificationProvider>
       <View style={{ flex: 1 }}>

@@ -1,5 +1,15 @@
 import React, { useState, useContext } from "react";
-import { View, Text, TouchableOpacity, TextInput, Image, Alert, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    TextInput,
+    Image,
+    Alert,
+    StyleSheet,
+    Modal,
+    ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import SimpleLineIcons from "react-native-vector-icons/SimpleLineIcons";
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -8,19 +18,35 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-nat
 
 const SignUpScreen = ({ navigation }) => {
     const [secureEntry, setSecureEntry] = useState(true);
-    const [email, setEmail] = useState();
-    const [password, setPassword] = useState();
-    const [confirmPassword, setConfirmPassword] = useState();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const { register } = useContext(AuthContext);
 
-    const handleSignUp = () => {
-        if (password !== confirmPassword) {
-            Alert.alert('Error', 'Passwords do not match');
+    const handleSignUp = async () => {
+        if (!email || !password || !confirmPassword) {
+            Alert.alert('Error', 'All fields are required.');
             return;
         }
-        register(email, password);
+
+        if (password !== confirmPassword) {
+            Alert.alert('Error', 'Passwords do not match.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await register(email, password); // ฟังก์ชันการสมัครสมาชิก
+        } catch (e) {
+            //Alert.alert('Error', 'Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
+
+   
 
     return (
         <SafeAreaView style={styles.container}>
@@ -78,7 +104,11 @@ const SignUpScreen = ({ navigation }) => {
                 <TouchableOpacity
                     style={styles.signupButton}
                     onPress={handleSignUp}>
-                    <Text style={styles.signupButtonText}>Signup</Text>
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#FFF" />
+                    ) : (
+                        <Text style={styles.signupButtonText}>Signup</Text>
+                    )}
                 </TouchableOpacity>
 
                 <View style={styles.footerContainer}>
@@ -87,6 +117,8 @@ const SignUpScreen = ({ navigation }) => {
                         <Text style={styles.loginLink}>Login</Text>
                     </TouchableOpacity>
                 </View>
+
+                
             </View>
         </SafeAreaView>
     );
@@ -133,7 +165,7 @@ const styles = StyleSheet.create({
     inputText: {
         flex: 1,
         fontSize: wp('4.5%'),
-        marginLeft:8,
+        marginLeft: 8,
         color: '#45484A',
     },
     signupButton: {
@@ -161,4 +193,5 @@ const styles = StyleSheet.create({
         fontSize: wp('4.5%'),
         fontWeight: '700',
     },
+
 });

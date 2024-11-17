@@ -1,6 +1,6 @@
-import React, {useState, useEffect} from 'react';
-import {View} from 'react-native';
-import {createStackNavigator} from '@react-navigation/stack';
+import React, { useState, useEffect } from 'react';
+import { View , ActivityIndicator} from 'react-native';
+import { createStackNavigator } from '@react-navigation/stack';
 import SignUpScreen from '../screen/SignUpScreen';
 import LoginScreen from '../screen/LoginScreen';
 import OnboardingScreen from '../screen/OnboardingScreen';
@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import HomeLoginScreen from '../screen/HomeLoginScreen';
 import ResetPasswordScreen from '../screen/ResetPasswordScreen';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import CustomLoading from '../components/CustomLoading';
 
 
 
@@ -18,24 +19,35 @@ const AuthStack = () => {
   let routeName;
 
   useEffect(() => {
-    AsyncStorage.getItem('alreadyLaunched').then((value) => {
-      if (value == null) {
-        AsyncStorage.setItem('alreadyLaunched', 'true'); // No need to wait for `setItem` to finish, although you might want to handle errors
-        setIsFirstLaunch(true);
-      } else {
-        setIsFirstLaunch(false);
+    const checkFirstLaunch = async () => {
+      try {
+        const value = await AsyncStorage.getItem('alreadyLaunched');
+        if (value === null) {
+          await AsyncStorage.setItem('alreadyLaunched', 'true');
+          setIsFirstLaunch(true);
+        } else {
+          setIsFirstLaunch(false);
+        }
+      } catch (error) {
+        console.log('Error accessing AsyncStorage:', error);
+        setIsFirstLaunch(false); // fallback ค่า default
       }
-    }); // Add some error handling, also you can simply do setIsFirstLaunch(null)
-  
+    };
+
+    checkFirstLaunch();
+
     GoogleSignin.configure({
       webClientId: '941923011037-1v13bj71v61bm5c7notm8oalbmq88h82.apps.googleusercontent.com',
     });
-
   }, []);
 
   if (isFirstLaunch === null) {
-    return null; // This is the 'tricky' part: The query to AsyncStorage is not finished, but we have to present something to the user. Null will just render nothing, so you can also put a placeholder of some sort, but effectively the interval between the first mount and AsyncStorage retrieving your data won't be noticeable to the user. But if you want to display anything then you can use a LOADER here
-  } else if (isFirstLaunch == true) {
+    return (
+      <CustomLoading/>
+    );
+  }
+
+  else if (isFirstLaunch == true) {
     routeName = 'Onboarding';
   } else {
     routeName = 'HomeLogin';
@@ -46,29 +58,29 @@ const AuthStack = () => {
       <Stack.Screen
         name="Onboarding"
         component={OnboardingScreen}
-        options={{header: () => null}}
+        options={{ header: () => null }}
       />
       <Stack.Screen
         name="HomeLogin"
         component={HomeLoginScreen}
-        options={{header: () => null}}
+        options={{ header: () => null }}
       />
       <Stack.Screen
         name="Login"
         component={LoginScreen}
-        options={{header: () => null}}
+        options={{ header: () => null }}
       />
       <Stack.Screen
         name="Signup"
         component={SignUpScreen}
-        options={{header: () => null}}
-          
+        options={{ header: () => null }}
+
       />
       <Stack.Screen
         name="ResetPassword"
         component={ResetPasswordScreen}
-        options={{header: () => null}}
-          
+        options={{ header: () => null }}
+
       />
     </Stack.Navigator>
   );

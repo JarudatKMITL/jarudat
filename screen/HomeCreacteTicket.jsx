@@ -48,16 +48,15 @@ const CreateTicketScreen = ({ navigation }) => {
       category: !category
     };
     setErrorFields(errors);
-
-    // ตรวจสอบว่ามีฟิลด์ไหนที่ไม่ถูกกรอกข้อมูล
+  
     if (!title || !descriptions || !category) {
       Alert.alert('Error', 'Please fill in all required fields.');
       return;
     }
-
-    setLoading(true); // เริ่มการแสดงการหมุน
+  
+    setLoading(true);
     const timeout = setTimeout(() => {
-      if (loading) { // ถ้ายังคงโหลดหลังจากผ่านไป 1 นาที
+      if (loading) {
         Alert.alert(
           'Connection Issue',
           'Please check your internet connection.',
@@ -65,48 +64,43 @@ const CreateTicketScreen = ({ navigation }) => {
             {
               text: 'OK',
               onPress: () => {
-                setLoading(false); // หยุดการโหลดเมื่อกด OK
+                setLoading(false);
               }
             }
           ]
         );
       }
-    }, 60000); // 1 นาที = 60000 มิลลิวินาที
-
+    }, 60000);
+  
     try {
       const now = new Date();
       const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0'); // เดือนต้องการให้มีสองหลัก
-      const day = String(now.getDate()).padStart(2, '0'); // วันที่ต้องการให้มีสองหลัก
-
-      // ดึงจำนวนงานที่มีทั้งหมดเพื่อนับลำดับ
+      const month = String(now.getMonth() + 1).padStart(2, '0');
       const ticketRef = firebase.firestore().collection('tickets');
-      const querySnapshot = await ticketRef.get();
-
-      // นับจำนวนงานทั้งหมดแล้วเพิ่ม 1 (เพื่อให้เลขลำดับไม่ซ้ำกัน)
-      const ticketCount = querySnapshot.size + 1;
-      const ticketNumber = String(ticketCount).padStart(3, '0'); // เริ่มที่ 000 แล้วบวกขึ้นไป
-
-      // สร้าง Document ID ตามรูปแบบที่ต้องการ: YYYYMMDD000
-      const ticketId = `${year}${month}${day}${ticketNumber}`;
-
-      // ตรวจสอบว่ามีเอกสารที่ใช้ ticketId นี้หรือไม่
-      const existingDoc = await ticketRef.doc(ticketId).get();
-      if (existingDoc.exists) {
-        Alert.alert('Error', 'A ticket with this ID already exists. Please try again.');
-        setLoading(false);
-        return;
+  
+      // ดึงเอกสารของเดือนปัจจุบัน
+      const querySnapshot = await ticketRef
+        .where('createdAt', '>=', new Date(year, now.getMonth(), 1))
+        .where('createdAt', '<', new Date(year, now.getMonth() + 1, 1))
+        .get();
+  
+      let lastTicketID = `${year}${month}001`; // เริ่มที่ 000 หากไม่มีข้อมูลในเดือนนั้น
+  
+      if (!querySnapshot.empty) {
+        // หา ticketID สูงสุดจากเอกสารที่ดึงมา
+        const ticketNumbers = querySnapshot.docs.map(doc => parseInt(doc.id.slice(6), 10));
+        const maxTicketNumber = Math.max(...ticketNumbers);
+        lastTicketID = `${year}${month}${String(maxTicketNumber + 1).padStart(3, '0')}`;
       }
+  
       let imageUrl = null;
       if (selectedImage) {
         imageUrl = await uploadImageToFirebase(selectedImage);
       }
-
-      // บันทึกข้อมูลของ ticket ใน Firestore โดยใช้ ticketId เป็น Document ID
-      await ticketRef.doc(ticketId).set({
-
-        //ข้อมูลผู้ใช้และเจ้าของงาน
-        userFullName: displayName || '', // ชื่อเต็ม
+  
+      await ticketRef.doc(lastTicketID).set({
+        ticketID: lastTicketID,
+        userFullName: displayName || '',
         userNickname: nickName || '',
         userEmail: user.email,
         userPhone: phone || '',
@@ -114,40 +108,36 @@ const CreateTicketScreen = ({ navigation }) => {
         department: department || '',
         employeeID: employeeID || '',
         role: role || '',
-        profileImage: profileImage || '', // รูปโปรไฟล์
-        //ข้อมูลของงาน
-        ticketCount,  // เลขที่งานรันเรื่อยๆ
-        title, //ชื่องาน
-        descriptions, //รายละเอียด
-        priority, // ระดับความสำคัญ
-        category, // ประเภท
-        location, // สถานที่ผู้แจ้ง
-        tags: tags || [], // แท็กหรือป้ายกำกับ
-        //สถานะและการจัดการงาน
-        status: 'Pending', // เริ่มต้นสถานะ
+        profileImage: profileImage || '',
+        title,
+        descriptions,
+        priority,
+        category,
+        location,
+        tags: tags || [],
+        status: 'Pending',
         progress: 0,
         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-         
-        dueDate: dueDate || null, // วันที่กำหนดเสร็จ
-        estimatedTime: estimatedTime || null, // เวลาโดยประมาณในการแก้ไขปัญหา
-        attachments: imageUrl || null, // เอกสารหรือรูปภาพที่แนบมา
-        
-        
-        jobOwner: null, // รายละเอียดการติดตาม รับงานโดย
-        lastUpdatedJobOwner: null, // วันที่ตอนรับงาน
-        resolutionNotes: null, // บันทึกการแก้ปัญหาหลังจากเสร็จสิ้น
+        dueDate: dueDate || null,
+        estimatedTime: estimatedTime || null,
+        attachments: imageUrl || null,
+        jobOwner: null,
+        lastUpdatedJobOwner: null,
+        resolutionNotes: null,
       });
-
+  
       Alert.alert('Success', 'Your ticket has been created successfully!');
-      navigation.goBack(); // กลับไปยังหน้าหลัก
+      navigation.goBack();
     } catch (error) {
       console.log('Error creating ticket:', error);
       Alert.alert('Error', 'Failed to create ticket. Please try again later.');
     } finally {
       clearTimeout(timeout);
-      setLoading(false); // ปิดการแสดงการหมุนเมื่อบันทึกเสร็จ
+      setLoading(false);
     }
   };
+  
+  
 
 
   // ฟังก์ชันเลือกภาพจากแกลเลอรี่

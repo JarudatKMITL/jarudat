@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5eff8',
     padding: wp('5%'),
     paddingBottom: hp('5%'), // เพิ่มระยะห่างจากด้านล่าง
+    //marginTop: hp('5%'),
   },
   // ส่วนอื่น ๆ ของสไตล์ยังคงเหมือนเดิม
 

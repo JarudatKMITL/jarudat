@@ -33,6 +33,7 @@ const Tab = createBottomTabNavigator();
 const HomeStack = ({ navigation }) => (
     <Stack.Navigator
         screenOptions={{
+            headerShown: false,
             headerTintColor: '#fff',
             headerStyle: { backgroundColor: '#06141B' },
         }}

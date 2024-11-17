@@ -112,6 +112,9 @@ android {
 }
 
 dependencies {
+    implementation "com.airbnb.android:lottie:5.2.0" // เพิ่ม dependency สำหรับ Lottie
+
+
     implementation 'com.google.firebase:firebase-auth'
     implementation 'com.google.android.gms:play-services-auth'
 
